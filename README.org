@@ -1,0 +1,25 @@
+#+TITLE: corfu-doc - Documentation popup for Corfu
+#+AUTHOR: Tian Yuwei
+
+* Introduction
+
+Display a documentation popup for completion candidate when using Corfu.
+It can be re regarded as =company-quickhelp= for [[https://github.com/minad/corfu][Corfu]].
+
+[[https://github.com/galeo/corfu-doc/blob/screenshots/right.png?raw=true]]
+
+[[https://github.com/galeo/corfu-doc/blob/screenshots/left.png?raw=true]]
+
+* Installation
+
+Currently =corfu-doc= can be installed with =package-install-file=.
+
+Enable it with =M-x corfu-doc-mode= or by using =corfu-mode-hook=:
+
+#+begin_src elisp
+(add-hook 'corfu-mode-hook #'corfu-doc-mode)
+#+end_src
+
+* License
+
+GPLv3
