@@ -155,17 +155,21 @@
 ;; Function adapted from corfu.el by Daniel Mendler
 (defun corfu-doc-fetch-documentation ()
   "Fetch documentation buffer of current candidate."
-  (when (< corfu--index 0)
-    (user-error "No candidate selected"))
-  (if-let* ((fun (plist-get corfu--extra :company-doc-buffer))
-            (res
-             ;; fix showing candidate location when fetch helpful documentation
-             (save-excursion
-               (funcall fun (nth corfu--index corfu--candidates)))))
-      (let ((buf (or (car-safe res) res)))
-        (with-current-buffer buf
-          (buffer-string)))
-    (user-error "No documentation available")))
+  (cond
+    ((= corfu--total 0)
+     (user-error "No candidates"))
+    ((< corfu--index 0)
+     (user-error "No candidate selected"))
+    (t
+     (if-let* ((fun (plist-get corfu--extra :company-doc-buffer))
+               (res
+                ;; fix showing candidate location when fetch helpful documentation
+                (save-excursion
+                  (funcall fun (nth corfu--index corfu--candidates)))))
+         (let ((buf (or (car-safe res) res)))
+           (with-current-buffer buf
+             (buffer-string)))
+       (user-error "No documentation available")))))
 
 (defun corfu-doc--calculate-doc-frame-position ()
   "Calculate doc frame position (x, y), pixel width and height."
@@ -214,20 +218,21 @@
     (list x y cf-doc-frame-width cf-doc-frame-height)))
 
 (defun corfu-doc--show ()
-  (when-let* ((corfu-on (and (fboundp 'corfu-mode) corfu-mode))
-              (f-v-p (frame-visible-p corfu--frame))
-              (candidate (nth corfu--index corfu--candidates)))
-    (unless (and (string= corfu-doc--candidate candidate)
-                 (frame-visible-p corfu-doc--frame)
-                 (eq (selected-window) corfu-doc--window))
-      ;; show doc frame
-      (when-let* ((doc (ignore-errors
-                         (corfu-doc-fetch-documentation)))
-                  (doc-frame
-                   (eval `(corfu-doc--make-frame
-                           ,@(corfu-doc--calculate-doc-frame-position) ,doc))))
-        (setq corfu-doc--candidate candidate)
-        (setq corfu-doc--window (selected-window))))))
+  (let ((candidate (and (> corfu--total 0)
+                        (nth corfu--index corfu--candidates))))
+    (if candidate
+        (when-let* ((corfu-on (and (fboundp 'corfu-mode) corfu-mode))
+                    (f-v-p (frame-visible-p corfu--frame)))
+          (unless (and (string= corfu-doc--candidate candidate)
+                       (frame-visible-p corfu-doc--frame)
+                       (eq (selected-window) corfu-doc--window))
+            ;; show doc frame
+            (when-let* ((doc (ignore-errors (corfu-doc-fetch-documentation))))
+              (eval `(corfu-doc--make-frame
+                      ,@(corfu-doc--calculate-doc-frame-position) ,doc)))))
+      (corfu-doc--hide))
+    (setq corfu-doc--candidate candidate)
+    (setq corfu-doc--window (selected-window))))
 
 (defun corfu-doc--hide ()
   (when (frame-live-p corfu-doc--frame)
