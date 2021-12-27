@@ -63,6 +63,16 @@
 (defvar corfu-doc--frame nil
   "Doc frame.")
 
+(defvar corfu-doc--frame-parameters
+  (let* ((cw (default-font-width))
+         (lm (* cw corfu-left-margin-width))
+         (rm (* cw corfu-right-margin-width)))
+    (map-merge 'alist
+               corfu--frame-parameters
+               `((left-fringe . ,(ceiling lm))
+                 (right-fringe . ,(ceiling rm)))))
+  "Default doc child frame parameters.")
+
 (defvar corfu-doc--window nil
   "Current window corfu is in.")
 
@@ -89,6 +99,7 @@
       (use-local-map corfu--mouse-ignore-map)
       (dolist (var corfu--buffer-parameters)
         (set (make-local-variable (car var)) (cdr var)))
+      (setq-local indicate-empty-lines nil)
       (setq-local face-remapping-alist (copy-tree fr))
       (cl-pushnew 'corfu-default (alist-get 'default face-remapping-alist))
       (let ((inhibit-modification-hooks t)
@@ -117,7 +128,7 @@
                                                     (getenv "DESKTOP_SESSION") ""))
              'resize-mode)))
          (after-make-frame-functions)
-         (border (alist-get 'child-frame-border-width corfu--frame-parameters))
+         (border (alist-get 'child-frame-border-width corfu-doc--frame-parameters))
          (buffer (corfu-doc--make-buffer content)))
     (unless (and (frame-live-p corfu-doc--frame)
                  (eq (frame-parent corfu-doc--frame) (window-frame)))
@@ -128,7 +139,7 @@
                                 (line-spacing . ,line-spacing)
                                 ;; Set `internal-border-width' for Emacs 27
                                 (internal-border-width . ,border)
-                                ,@corfu--frame-parameters))))
+                                ,@corfu-doc--frame-parameters))))
     ;; XXX HACK Setting the same frame-parameter/face-background is not a nop (BUG!).
     ;; Check explicitly before applying the setting.
     ;; Without the check, the frame flickers on Mac.
@@ -141,7 +152,11 @@
 	    (set-face-background face internal-border-color corfu-doc--frame)
         ;; XXX HACK We have to apply the face background before adjusting the frame parameter,
         ;; otherwise the border is not updated (BUG!).
-        (set-frame-parameter corfu-doc--frame 'background-color bg-color)))
+        (set-frame-parameter corfu-doc--frame 'background-color bg-color))
+      ;; set fringe color
+      (unless (equal (face-attribute 'fringe :background corfu-doc--frame 'default)
+                     bg-color)
+        (set-face-background 'fringe bg-color corfu-doc--frame)))
     (let ((win (frame-root-window corfu-doc--frame)))
       (set-window-buffer win buffer)
       ;; Mark window as dedicated to prevent frame reuse (#60)
@@ -187,8 +202,12 @@
            (cl-subseq (frame-edges cf-parent-frame 'inner) 0 2))
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
          (cf-doc-frame-width
-           ;; left-border + inner width + right border
-           (+ 1 (* (frame-char-width) corfu-doc-max-width) 1))
+           ;; left border + left margin + inner width + right margin + right-border
+           (+ 1
+              (alist-get 'left-fringe corfu-doc--frame-parameters 0)
+              (* (frame-char-width) corfu-doc-max-width)
+              (alist-get 'right-fringe corfu-doc--frame-parameters 0)
+              1))
          (cf-doc-frame-height (* (frame-char-height) corfu-doc-max-height))
          (display-width
            (nth 3 (assq 'geometry (car (display-monitor-attributes-list)))))
