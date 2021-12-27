@@ -132,15 +132,16 @@
     ;; XXX HACK Setting the same frame-parameter/face-background is not a nop (BUG!).
     ;; Check explicitly before applying the setting.
     ;; Without the check, the frame flickers on Mac.
-    ;; XXX HACK We have to apply the face background before adjusting the frame parameter,
-    ;; otherwise the border is not updated (BUG!).
     (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
-	   (new (face-attribute 'corfu-border :background nil 'default)))
-      (unless (equal (face-attribute face :background corfu-doc--frame 'default) new)
-	(set-face-background face new corfu-doc--frame)))
-    (let ((new (face-attribute 'corfu-default :background nil 'default)))
-      (unless (equal (frame-parameter corfu-doc--frame 'background-color) new)
-	(set-frame-parameter corfu-doc--frame 'background-color new)))
+	       (internal-border-color (face-attribute 'corfu-border :background nil 'default))
+           (bg-color (face-attribute 'corfu-default :background nil 'default)))
+      (unless (and (equal (face-attribute face :background corfu-doc--frame 'default)
+                          internal-border-color)
+                   (equal (frame-parameter corfu--frame 'background-color) bg-color))
+	    (set-face-background face internal-border-color corfu-doc--frame)
+        ;; XXX HACK We have to apply the face background before adjusting the frame parameter,
+        ;; otherwise the border is not updated (BUG!).
+        (set-frame-parameter corfu-doc--frame 'background-color bg-color)))
     (let ((win (frame-root-window corfu-doc--frame)))
       (set-window-buffer win buffer)
       ;; Mark window as dedicated to prevent frame reuse (#60)
