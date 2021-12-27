@@ -272,6 +272,25 @@
     (corfu-doc--cancel-timer))
   (corfu-doc--hide))
 
+(defun corfu-doc--funcall (function &rest args)
+  (when-let ((cf-doc-buf (and (frame-live-p corfu-doc--frame)
+                              (frame-visible-p corfu-doc--frame)
+                              (get-buffer " *corfu-doc*"))))
+    (when (functionp function)
+      (with-selected-frame corfu-doc--frame
+        (with-current-buffer cf-doc-buf
+          (apply function args))))))
+
+;;;###autoload
+(defun corfu-doc-scroll-up (&optional arg)
+  (interactive "^P")
+  (corfu-doc--funcall #'scroll-up-command arg))
+
+;;;###autoload
+(defun corfu-doc-scroll-down (&optional arg)
+  (interactive "^P")
+  (corfu-doc--funcall #'scroll-down-command arg))
+
 ;;;###autoload
 (define-minor-mode corfu-doc-mode
   "Corfu doc minor mode."

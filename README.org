@@ -20,6 +20,16 @@ Enable it with =M-x corfu-doc-mode= or by using =corfu-mode-hook=:
 (add-hook 'corfu-mode-hook #'corfu-doc-mode)
 #+end_src
 
+** Scroll the documentation
+
+Bind keys <kbd>M-p</kbd> and <kbd>M-n</kbd> to commands =corfu-doc-scroll-down= and
+=corfu-doc-scroll-up= to scroll the documentation.
+
+#+begin_src elisp
+(define-key corfu-map (kbd "M-p") #'corfu-doc-scroll-down) ;; corfu-next
+(define-key corfu-map (kbd "M-n") #'corfu-doc-scroll-up)  ;; corfu-previous
+#+end_src
+
 * License
 
 GPLv3
