@@ -267,7 +267,7 @@
   (let ((corfu-doc-delay 0))
     (corfu-doc--set-timer)))
 
-(defun corfu-doc--set-timer (&rest args)
+(defun corfu-doc--set-timer (&rest _args)
   (when (or (null corfu-doc--timer)
             (eq this-command #'corfu-doc-manually))
     (setq corfu-doc--timer
