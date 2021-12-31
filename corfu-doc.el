@@ -1,10 +1,10 @@
 ;;; corfu-doc.el --- Documentation popup for Corfu -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Tian Yuwei
+;; Copyright (C) 2021-2022 Tian Yuwei
 
 ;; Author: Tian Yuwei <ibluefocus@NOSPAM.gmail.com>
 ;; URL: https://github.com/galeo/corfu-doc
-;; Version: 0.0.1
+;; Version: 0.0.2
 ;; Keywords: corfu popup documentation convenience
 ;; Package-Requires: ((emacs "26.0")(corfu "0.16.0"))
 
