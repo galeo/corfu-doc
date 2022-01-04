@@ -196,10 +196,10 @@
          (cf-frame-x (car cf-frame--pos))  ;; corfu--frame x pos
          (cf-frame-y (cdr cf-frame--pos))
          (cf-frame-width (frame-pixel-width corfu--frame))
-         (cf-parent-frame-pos  ;; corfu parent frame pos
+         (cf-parent-frame-x  ;; corfu parent frame x pos
            ;; Get inner frame left top edge for corfu frame's parent frame
            ;; See "(elisp) Frame Layout" in Emacs manual
-           (cl-subseq (frame-edges cf-parent-frame 'inner) 0 2))
+           (car (cl-subseq (frame-edges cf-parent-frame 'inner) 0 2)))
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
          (cf-doc-frame-width
            ;; left border + left margin + inner width + right margin + right-border
@@ -209,21 +209,24 @@
               (alist-get 'right-fringe corfu-doc--frame-parameters 0)
               1))
          (cf-doc-frame-height (* (frame-char-height) corfu-doc-max-height))
-         (display-width
-           (nth 3 (assq 'geometry (car (display-monitor-attributes-list)))))
+         (display-geometry (assq 'geometry (frame-monitor-attributes corfu--frame)))
+         (display-width (nth 3 display-geometry))
+         (display-x (nth 1 display-geometry))
+         (cf-parent-frame-rel-x (- cf-parent-frame-x display-x))
          (display-space-right
            (- display-width (+ (+ cf-frame-x cf-frame-width space)
-                               (car cf-parent-frame-pos))))
-         (display-space-left (+ cf-frame-x (car cf-parent-frame-pos))))
+                               cf-parent-frame-rel-x)))
+         (display-space-left (- (+ cf-frame-x cf-parent-frame-rel-x)
+                                space)))
     (setq x (or
              (and (> cf-doc-frame-width display-space-right)
-                  (> display-space-left (+ cf-doc-frame-width space))
+                  (> display-space-left cf-doc-frame-width)
                   ;; space that right edge of the DOC-FRAME
                   ;; to the right edge of the parent frame
                   ;;   calculation:
-                  ;; (- (+ cf-frame-x (car cf-parent-frame-pos))
+                  ;; (- (+ cf-frame-x cf-parent-frame-x)
                   ;;    space
-                  ;;    (+ (car cf-parent-frame-pos) cf-parent-frame-width))
+                  ;;    (+ cf-parent-frame-x cf-parent-frame-width))
                   (- cf-frame-x space cf-parent-frame-width))
              (let* ((x-on-left-side-of-cp-frame
                       (- cf-frame-x space cf-doc-frame-width)))
@@ -231,7 +234,7 @@
                 ;; still positioned in completion frame's parent frame
                 (and (> x-on-left-side-of-cp-frame 0)
                      ;; and x point is visible in display
-                     (> (+ x-on-left-side-of-cp-frame (car cf-parent-frame-pos)) 0)
+                     (> (+ x-on-left-side-of-cp-frame cf-parent-frame-x) 0)
                      x-on-left-side-of-cp-frame)
                 (+ cf-frame-x cf-frame-width space))))
           y cf-frame-y)
