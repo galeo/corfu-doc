@@ -82,6 +82,9 @@
 (defvar-local corfu-doc--candidate nil
   "Completion candidate to show doc for.")
 
+(defvar-local corfu-doc--cf-frame-edges nil
+  "Coordinates of the corfu frame's edges.")
+
 ;; Function adapted from corfu.el by Daniel Mendler
 (defun corfu-doc--redirect-focus ()
   "Redirect focus from doc."
@@ -242,12 +245,14 @@
 
 (defun corfu-doc--show ()
   (let ((candidate (and (> corfu--total 0)
-                        (nth corfu--index corfu--candidates))))
+                        (nth corfu--index corfu--candidates)))
+        (cf-frame-edges (frame-edges corfu--frame 'inner)))
     (if candidate
-        (when-let* ((corfu-on (and (fboundp 'corfu-mode) corfu-mode))
-                    (f-v-p (frame-visible-p corfu--frame)))
+        (when (and (and (fboundp 'corfu-mode) corfu-mode)
+                   (frame-visible-p corfu--frame))
           (unless (and (string= corfu-doc--candidate candidate)
                        (frame-visible-p corfu-doc--frame)
+                       (equal cf-frame-edges corfu-doc--cf-frame-edges)
                        (eq (selected-window) corfu-doc--window))
             ;; show doc frame
             (when-let* ((doc (ignore-errors (corfu-doc-fetch-documentation))))
@@ -255,6 +260,7 @@
                       ,@(corfu-doc--calculate-doc-frame-position) ,doc)))))
       (corfu-doc--hide))
     (setq corfu-doc--candidate candidate)
+    (setq corfu-doc--cf-frame-edges cf-frame-edges)
     (setq corfu-doc--window (selected-window))))
 
 (defun corfu-doc--hide ()
