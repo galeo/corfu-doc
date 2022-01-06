@@ -35,6 +35,7 @@
 (eval-when-compile
   (require 'cl-lib)
   (require 'subr-x))
+(require 'map)
 (require 'corfu)
 
 (defgroup corfu-doc nil
