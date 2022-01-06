@@ -36,6 +36,7 @@
   (require 'cl-lib)
   (require 'subr-x))
 (require 'corfu)
+(require 'map)
 
 (defgroup corfu-doc nil
   "Display documentation popup alongside corfu."
