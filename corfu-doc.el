@@ -170,7 +170,10 @@
       (make-frame-invisible corfu-doc--frame))
     (set-frame-position corfu-doc--frame x y)
     (set-frame-size corfu-doc--frame width height t)
-    (make-frame-visible corfu-doc--frame)))
+    (make-frame-visible corfu-doc--frame)
+    ;; HACK: Force redisplay, otherwise the popup somtimes
+    ;; does not display content.
+    (redisplay)))
 
 ;; Function adapted from corfu.el by Daniel Mendler
 (defun corfu-doc-fetch-documentation ()
