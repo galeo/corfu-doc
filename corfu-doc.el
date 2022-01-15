@@ -252,6 +252,7 @@
         (when (and (and (fboundp 'corfu-mode) corfu-mode)
                    (frame-visible-p corfu--frame))
           (unless (and (string= corfu-doc--candidate candidate)
+                       (frame-live-p corfu-doc--frame)
                        (frame-visible-p corfu-doc--frame)
                        (equal cf-frame-edges corfu-doc--cf-frame-edges)
                        (eq (selected-window) corfu-doc--window))
