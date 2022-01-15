@@ -257,9 +257,11 @@
                        (equal cf-frame-edges corfu-doc--cf-frame-edges)
                        (eq (selected-window) corfu-doc--window))
             ;; show doc frame
-            (when-let* ((doc (ignore-errors (corfu-doc-fetch-documentation))))
-              (eval `(corfu-doc--make-frame
-                      ,@(corfu-doc--calculate-doc-frame-position) ,doc)))))
+            (if-let* ((res (ignore-errors (corfu-doc-fetch-documentation)))
+                      (doc (unless (string-empty-p (string-trim res)) res)))
+                (eval `(corfu-doc--make-frame
+                        ,@(corfu-doc--calculate-doc-frame-position) ,doc))
+              (corfu-doc--hide))))
       (corfu-doc--hide))
     (setq corfu-doc--candidate candidate)
     (setq corfu-doc--cf-frame-edges cf-frame-edges)
