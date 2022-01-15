@@ -334,6 +334,19 @@
      (advice-remove 'corfu--popup-show #'corfu-doc--set-timer)
      (advice-remove 'corfu--popup-hide #'corfu-doc-hide))))
 
+;;;###autoload
+(defun corfu-doc-toggle (&optional arg)
+  "Toggle corfu doc on or off.
+With optional ARG, turn corfu doc on if and only if ARG is positive."
+  (interactive "P")
+  (if (null arg)
+      (setq arg (if corfu-doc-mode -1 1))
+    (setq arg (prefix-numeric-value arg)))
+  (if (> arg 0)
+      (corfu-doc-manually)
+    (corfu-doc-hide))
+  (corfu-doc-mode arg))
+
 
 (provide 'corfu-doc)
 ;;; corfu-doc.el ends here

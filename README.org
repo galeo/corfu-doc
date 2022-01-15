@@ -1,10 +1,10 @@
 #+TITLE: corfu-doc - Documentation popup for Corfu
-#+AUTHOR: Tian Yuwei
+#+AUTHOR: Yuwei Tian
 
 * Introduction
 
 Display a documentation popup for completion candidate when using Corfu.
-It can be re regarded as =company-quickhelp= for [[https://github.com/minad/corfu][Corfu]].
+It can be regarded as =company-quickhelp= for [[https://github.com/minad/corfu][Corfu]].
 
 [[https://github.com/galeo/corfu-doc/blob/screenshots/right.png?raw=true]]
 
@@ -28,6 +28,14 @@ Bind keys =M-p= and =M-n= to commands =corfu-doc-scroll-down= and
 #+begin_src elisp
 (define-key corfu-map (kbd "M-p") #'corfu-doc-scroll-down) ;; corfu-next
 (define-key corfu-map (kbd "M-n") #'corfu-doc-scroll-up)  ;; corfu-previous
+#+end_src
+
+** Quickly toggle the documentation on or off
+
+Bind a key to quickly toggle the documentation popup on or off.
+
+#+begin_src elisp
+(define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 #+end_src
 
 * License
