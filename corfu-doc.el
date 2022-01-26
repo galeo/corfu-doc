@@ -210,6 +210,7 @@ If this is nil, do not resize corfu doc frame automatically."
          (cf-frame-x (car cf-frame--pos))  ;; corfu--frame x pos
          (cf-frame-y (cdr cf-frame--pos))
          (cf-frame-width (frame-pixel-width corfu--frame))
+         (cf-frame-height (frame-pixel-height corfu--frame))
          (cf-parent-frame-x  ;; corfu parent frame x pos
            ;; Get inner frame left top edge for corfu frame's parent frame
            ;; See "(elisp) Frame Layout" in Emacs manual
@@ -217,11 +218,11 @@ If this is nil, do not resize corfu doc frame automatically."
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
          (cf-doc-frame-width
            (if (not corfu-doc-resize-frame)
-           ;; left border + left margin + inner width + right margin + right-border
-           (+ 1
-              (alist-get 'left-fringe corfu-doc--frame-parameters 0)
-              (* (frame-char-width) corfu-doc-max-width)
-              (alist-get 'right-fringe corfu-doc--frame-parameters 0)
+               ;; left border + left margin + inner width + right margin + right-border
+               (+ 1
+                  (alist-get 'left-fringe corfu-doc--frame-parameters 0)
+                  (* (frame-char-width) corfu-doc-max-width)
+                  (alist-get 'right-fringe corfu-doc--frame-parameters 0)
                   1)
              (fit-frame-to-buffer corfu-doc--frame
                                   corfu-doc-max-height nil
@@ -246,26 +247,45 @@ If this is nil, do not resize corfu doc frame automatically."
                                cf-parent-frame-rel-x)))
          (display-space-left (- (+ cf-frame-x cf-parent-frame-rel-x)
                                 space)))
-    (setq x (or
-             (and (> cf-doc-frame-width display-space-right)
-                  (> display-space-left cf-doc-frame-width)
-                  ;; space that right edge of the DOC-FRAME
-                  ;; to the right edge of the parent frame
-                  ;;   calculation:
-                  ;; (- (+ cf-frame-x cf-parent-frame-x)
-                  ;;    space
-                  ;;    (+ cf-parent-frame-x cf-parent-frame-width))
-                  (- cf-frame-x space cf-parent-frame-width))
-             (let* ((x-on-left-side-of-cp-frame
-                      (- cf-frame-x space cf-doc-frame-width)))
-               (or
-                ;; still positioned in completion frame's parent frame
-                (and (> x-on-left-side-of-cp-frame 0)
-                     ;; and x point is visible in display
-                     (> (+ x-on-left-side-of-cp-frame cf-parent-frame-x) 0)
-                     x-on-left-side-of-cp-frame)
-                (+ cf-frame-x cf-frame-width space))))
-          y cf-frame-y)
+    (let ((_x-on-left-side-of-cf-frame
+            (- cf-frame-x space cf-doc-frame-width))
+          (x-on-right-side-of-cf-frame
+            (+ cf-frame-x cf-frame-width space)))
+      (cond
+        ((> display-space-right cf-doc-frame-width)
+         (setq x x-on-right-side-of-cf-frame
+               y cf-frame-y))
+        ((and (< display-space-right cf-doc-frame-width)
+              (> display-space-left cf-doc-frame-width))
+         (setq x
+               ;; space that right edge of the DOC-FRAME
+               ;; to the right edge of the parent frame
+               ;;   calculation:
+               ;; (- (+ cf-frame-x cf-parent-frame-x)
+               ;;    space
+               ;;    (+ cf-parent-frame-x cf-parent-frame-width))
+               (- cf-frame-x space cf-parent-frame-width)
+               y cf-frame-y))
+        (t
+         (setq x cf-frame-x)
+         (let* ((beg (+ (nth 0 completion-in-region--data)
+                        corfu--base))
+                (cf-frame-y-b
+                  (+ (cadr (window-inside-pixel-edges))
+                     (window-tab-line-height)
+                     (or (cdr (posn-x-y (posn-at-point beg))) 0)
+                     (default-line-height)))
+                (y-on-top-side-of-cf-frame
+                  (- cf-frame-y space cf-doc-frame-height))
+                (y-on-bottom-side-of-cf-frame
+                  (+ cf-frame-y cf-frame-height space)))
+           (cond
+             ((> cf-frame-y-b cf-frame-y)
+              (setq y (max 1 y-on-top-side-of-cf-frame))
+              (if (< y-on-top-side-of-cf-frame 0)
+                  (setq cf-doc-frame-height
+                        (- cf-frame-y y 1 1 space))))
+             (t (setq y y-on-bottom-side-of-cf-frame)))))))
     (list x y cf-doc-frame-width cf-doc-frame-height)))
 
 (defun corfu-doc--show ()
