@@ -61,6 +61,14 @@
   :safe #'integerp
   :group 'corfu-doc)
 
+(defcustom corfu-doc-resize-frame nil
+  "Non-nil means resize the corfu doc frame automatically.
+
+If this is nil, do not resize corfu doc frame automatically."
+  :type 'boolean
+  :safe #'booleanp
+  :group 'corfu-doc)
+
 (defvar corfu-doc--frame nil
   "Doc frame.")
 
@@ -115,8 +123,8 @@
     buffer))
 
 ;; Function adapted from corfu.el by Daniel Mendler
-(defun corfu-doc--make-frame (x y width height content)
-  "Show child frame at X/Y with WIDTH/HEIGHT and CONTENT."
+(defun corfu-doc--make-frame (content)
+  "Make child frame with CONTENT."
   (let* ((window-min-height 1)
          (window-min-width 1)
          (x-gtk-resize-child-frames
@@ -164,13 +172,13 @@
     (let ((win (frame-root-window corfu-doc--frame)))
       (set-window-buffer win buffer)
       ;; Mark window as dedicated to prevent frame reuse (#60)
-      (set-window-dedicated-p win t))
-    ;; XXX HACK Make the frame invisible before moving the popup in order to avoid flicker.
-    (unless (eq (cdr (frame-position corfu-doc--frame)) y)
-      (make-frame-invisible corfu-doc--frame))
-    (set-frame-position corfu-doc--frame x y)
-    (set-frame-size corfu-doc--frame width height t)
-    (make-frame-visible corfu-doc--frame)))
+      (set-window-dedicated-p win t))))
+
+(defun corfu-doc--set-frame-position (frame x y width height)
+  "Show FRAME at X/Y with WIDTH/HEIGHT."
+  (set-frame-position frame x y)
+  (set-frame-size frame width height t)
+  (make-frame-visible frame))
 
 ;; Function adapted from corfu.el by Daniel Mendler
 (defun corfu-doc-fetch-documentation ()
@@ -206,13 +214,27 @@
            (car (cl-subseq (frame-edges cf-parent-frame 'inner) 0 2)))
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
          (cf-doc-frame-width
+           (if (not corfu-doc-resize-frame)
            ;; left border + left margin + inner width + right margin + right-border
            (+ 1
               (alist-get 'left-fringe corfu-doc--frame-parameters 0)
               (* (frame-char-width) corfu-doc-max-width)
               (alist-get 'right-fringe corfu-doc--frame-parameters 0)
-              1))
-         (cf-doc-frame-height (* (frame-char-height) corfu-doc-max-height))
+                  1)
+             (fit-frame-to-buffer corfu-doc--frame
+                                  corfu-doc-max-height nil
+                                  corfu-doc-max-width nil)
+             ;; outer width - left border - left margin - right margin - right-border
+             (- (frame-pixel-width corfu-doc--frame)
+                1
+                (alist-get 'left-fringe corfu-doc--frame-parameters 0)
+                (alist-get 'right-fringe corfu-doc--frame-parameters 0)
+                1)))
+         (cf-doc-frame-height
+           (if (not corfu-doc-resize-frame)
+               (* (frame-char-height) corfu-doc-max-height)
+             ;; outer height - top border - bottom border
+             (- (frame-pixel-height corfu-doc--frame) 1 1)))
          (display-geometry (assq 'geometry (frame-monitor-attributes corfu--frame)))
          (display-width (nth 3 display-geometry))
          (display-x (nth 1 display-geometry))
@@ -259,8 +281,11 @@
             ;; show doc frame
             (if-let* ((res (ignore-errors (corfu-doc-fetch-documentation)))
                       (doc (unless (string-empty-p (string-trim res)) res)))
-                (eval `(corfu-doc--make-frame
-                        ,@(corfu-doc--calculate-doc-frame-position) ,doc))
+                (progn
+                  (corfu-doc--make-frame doc)
+                  (apply #'corfu-doc--set-frame-position
+                         corfu-doc--frame
+                         (corfu-doc--calculate-doc-frame-position)))
               (corfu-doc--hide))))
       (corfu-doc--hide))
     (setq corfu-doc--candidate candidate)
