@@ -288,7 +288,8 @@ If this is nil, do not resize corfu doc frame automatically."
                   (apply #'corfu-doc--set-frame-position
                          corfu-doc--frame
                          (corfu-doc--calculate-doc-frame-position)))
-              (corfu-doc--hide))))
+              (corfu-doc--hide)))
+          (corfu--echo-refresh))
       (corfu-doc--hide))
     (setq corfu-doc--candidate candidate)
     (setq corfu-doc--cf-frame-edges cf-frame-edges)
