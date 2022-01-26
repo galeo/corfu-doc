@@ -193,7 +193,9 @@ If this is nil, do not resize corfu doc frame automatically."
                (res
                 ;; fix showing candidate location when fetch helpful documentation
                 (save-excursion
-                  (funcall fun (nth corfu--index corfu--candidates)))))
+                  (let ((inhibit-message t)
+                        (message-log-max nil))
+                    (funcall fun (nth corfu--index corfu--candidates))))))
          (let ((buf (or (car-safe res) res)))
            (with-current-buffer buf
              (buffer-string)))
