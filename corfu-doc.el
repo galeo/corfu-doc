@@ -61,7 +61,7 @@
   :safe #'integerp
   :group 'corfu-doc)
 
-(defcustom corfu-doc-resize-frame nil
+(defcustom corfu-doc-resize-frame t
   "Non-nil means resize the corfu doc frame automatically.
 
 If this is nil, do not resize corfu doc frame automatically."
