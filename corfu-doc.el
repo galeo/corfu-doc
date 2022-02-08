@@ -219,7 +219,7 @@ If this is nil, do not resize corfu doc frame automatically."
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
          (cf-doc-frame-width
            (if (not corfu-doc-resize-frame)
-               ;; left border + left margin + inner width + right margin + right-border
+               ;; left border + left margin + inner width + right margin + right border
                (+ 1
                   (alist-get 'left-fringe corfu-doc--frame-parameters 0)
                   (* (frame-char-width) corfu-doc-max-width)
@@ -228,7 +228,7 @@ If this is nil, do not resize corfu doc frame automatically."
              (fit-frame-to-buffer corfu-doc--frame
                                   corfu-doc-max-height nil
                                   corfu-doc-max-width nil)
-             ;; outer width - left border - left margin - right margin - right-border
+             ;; outer width - left border - left margin - right margin - right border
              (- (frame-pixel-width corfu-doc--frame)
                 1
                 (alist-get 'left-fringe corfu-doc--frame-parameters 0)
