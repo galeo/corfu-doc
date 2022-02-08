@@ -331,9 +331,12 @@ If this is nil, do not resize corfu doc frame automatically."
 (defun corfu-doc--set-timer (&rest _args)
   (when (or (null corfu-doc--timer)
             (eq this-command #'corfu-doc-manually))
-    (if (and (frame-live-p corfu-doc--frame)
-             (frame-visible-p corfu-doc--frame))
-        (make-frame-invisible corfu-doc--frame))
+    (when (and (frame-live-p corfu-doc--frame)
+               (frame-visible-p corfu-doc--frame)
+               (not (eq (and (> corfu--total 0)
+                             (nth corfu--index corfu--candidates))
+                        corfu-doc--candidate)))
+      (make-frame-invisible corfu-doc--frame))
     (setq corfu-doc--timer
           (run-with-idle-timer
            corfu-doc-delay
