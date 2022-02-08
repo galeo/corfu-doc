@@ -123,6 +123,7 @@ If this is nil, do not resize corfu doc frame automatically."
     buffer))
 
 ;; Function adapted from corfu.el by Daniel Mendler
+(defvar x-gtk-resize-child-frames) ;; Not present on non-gtk builds
 (defun corfu-doc--make-frame (content)
   "Make child frame with CONTENT."
   (let* ((window-min-height 1)
