@@ -306,17 +306,18 @@ If this is nil, do not resize corfu doc frame automatically."
             (unless (equal cf-frame-edges corfu-doc--cf-frame-edges)
               (apply #'corfu-doc--set-frame-position
                      corfu-doc--frame
-                     (corfu-doc--calculate-doc-frame-position))))
+                     (corfu-doc--calculate-doc-frame-position))
+              (setq corfu-doc--cf-frame-edges cf-frame-edges)))
         ;; fetch documentation and show
         (when-let* ((res (ignore-errors (corfu-doc-fetch-documentation)))
                     (doc (unless (string-empty-p (string-trim res)) res)))
           (corfu-doc--make-frame doc)
           (apply #'corfu-doc--set-frame-position
                  corfu-doc--frame
-                 (corfu-doc--calculate-doc-frame-position))))
+                 (corfu-doc--calculate-doc-frame-position))
+          (setq corfu-doc--candidate candidate)
+          (setq corfu-doc--cf-frame-edges cf-frame-edges)))
       (corfu--echo-refresh)
-      (setq corfu-doc--candidate candidate)
-      (setq corfu-doc--cf-frame-edges cf-frame-edges)
       (setq corfu-doc--window (selected-window)))))
 
 (defun corfu-doc-manually ()
