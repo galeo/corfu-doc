@@ -43,7 +43,7 @@
   :group 'corfu
   :prefix "corfu-doc-")
 
-(defcustom corfu-doc-delay 1
+(defcustom corfu-doc-delay 0.2
   "The number of seconds to wait before displaying the documentation popup."
   :type 'float
   :safe #'floatp
