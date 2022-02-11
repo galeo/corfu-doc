@@ -49,6 +49,16 @@
   :safe #'floatp
   :group 'corfu-doc)
 
+(defcustom corfu-doc-hide-threshold 0.2
+  "Threshold value to hide the documentation popup when browsing candidates.
+
+When the selected candidate is changed, if the value of `corfu-doc-delay'
+is greater than this threshold value, the documentation popup frame will
+be hided immediately. Else, just clear the doc frame content."
+  :type 'float
+  :safe #'floatp
+  :group 'corfu-doc)
+
 (defcustom corfu-doc-max-width 60
   "The max width of the corfu doc frame in characters."
   :type 'integer
@@ -293,6 +303,12 @@ If this is nil, do not resize corfu doc frame automatically."
   (and (> corfu--total 0)
        (nth corfu--index corfu--candidates)))
 
+(defun corfu-doc--clear-buffer ()
+  (with-current-buffer
+      (window-buffer (frame-root-window corfu-doc--frame))
+    (let ((inhibit-read-only t))
+      (erase-buffer))))
+
 (defun corfu-doc--show ()
   (when (and (and (fboundp 'corfu-mode) corfu-mode)
              (frame-visible-p corfu--frame))
@@ -332,7 +348,9 @@ If this is nil, do not resize corfu doc frame automatically."
                  (eq (selected-window) corfu-doc--window))
       (when (and (frame-live-p corfu-doc--frame)
                  (frame-visible-p corfu-doc--frame))
-        (make-frame-invisible corfu-doc--frame))))
+        (if (> corfu-doc-delay corfu-doc-hide-threshold)
+            (make-frame-invisible corfu-doc--frame)
+          (corfu-doc--clear-buffer)))))
   (when (or (null corfu-doc--timer)
             (eq this-command #'corfu-doc-manually))
     (setq corfu-doc--timer
@@ -350,10 +368,7 @@ If this is nil, do not resize corfu doc frame automatically."
 (defun corfu-doc--hide ()
   (when (frame-live-p corfu-doc--frame)
     (make-frame-invisible corfu-doc--frame)
-    (with-current-buffer
-        (window-buffer (frame-root-window corfu-doc--frame))
-      (let ((inhibit-read-only t))
-        (erase-buffer)))
+    (corfu-doc--clear-buffer)
     (setq corfu-doc--candidate nil)
     (setq corfu-doc--cf-frame-edges nil)
     (setq corfu-doc--window nil)))
