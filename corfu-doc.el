@@ -289,40 +289,35 @@ If this is nil, do not resize corfu doc frame automatically."
              (t (setq y y-on-bottom-side-of-cf-frame)))))))
     (list x y cf-doc-frame-width cf-doc-frame-height)))
 
-(defun corfu-doc--show ()
-  (let ((candidate (and (> corfu--total 0)
-                        (nth corfu--index corfu--candidates)))
-        (cf-frame-edges (frame-edges corfu--frame 'inner)))
-    (if candidate
-        (when (and (and (fboundp 'corfu-mode) corfu-mode)
-                   (frame-visible-p corfu--frame))
-          (unless (and (string= corfu-doc--candidate candidate)
-                       (frame-live-p corfu-doc--frame)
-                       (frame-visible-p corfu-doc--frame)
-                       (equal cf-frame-edges corfu-doc--cf-frame-edges)
-                       (eq (selected-window) corfu-doc--window))
-            ;; show doc frame
-            (if-let* ((res (ignore-errors (corfu-doc-fetch-documentation)))
-                      (doc (unless (string-empty-p (string-trim res)) res)))
-                (progn
-                  (corfu-doc--make-frame doc)
-                  (apply #'corfu-doc--set-frame-position
-                         corfu-doc--frame
-                         (corfu-doc--calculate-doc-frame-position)))
-              (corfu-doc--hide)))
-          (corfu--echo-refresh))
-      (corfu-doc--hide))
-    (setq corfu-doc--candidate candidate)
-    (setq corfu-doc--cf-frame-edges cf-frame-edges)
-    (setq corfu-doc--window (selected-window))))
+(defun corfu-doc--get-candidate ()
+  (and (> corfu--total 0)
+       (nth corfu--index corfu--candidates)))
 
-(defun corfu-doc--hide ()
-  (when (frame-live-p corfu-doc--frame)
-    (make-frame-invisible corfu-doc--frame)
-    (with-current-buffer
-        (window-buffer (frame-root-window corfu-doc--frame))
-      (let ((inhibit-read-only t))
-        (erase-buffer)))))
+(defun corfu-doc--show ()
+  (when (and (and (fboundp 'corfu-mode) corfu-mode)
+             (frame-visible-p corfu--frame))
+    (when-let ((candidate (corfu-doc--get-candidate))
+               (cf-frame-edges (frame-edges corfu--frame 'inner)))
+      (if (and (string= candidate corfu-doc--candidate)
+               (eq (selected-window) corfu-doc--window)
+               (frame-live-p corfu-doc--frame))
+          (progn
+            (make-frame-visible corfu-doc--frame)
+            (unless (equal cf-frame-edges corfu-doc--cf-frame-edges)
+              (apply #'corfu-doc--set-frame-position
+                     corfu-doc--frame
+                     (corfu-doc--calculate-doc-frame-position))))
+        ;; fetch documentation and show
+        (when-let* ((res (ignore-errors (corfu-doc-fetch-documentation)))
+                    (doc (unless (string-empty-p (string-trim res)) res)))
+          (corfu-doc--make-frame doc)
+          (apply #'corfu-doc--set-frame-position
+                 corfu-doc--frame
+                 (corfu-doc--calculate-doc-frame-position))))
+      (corfu--echo-refresh)
+      (setq corfu-doc--candidate candidate)
+      (setq corfu-doc--cf-frame-edges cf-frame-edges)
+      (setq corfu-doc--window (selected-window)))))
 
 (defun corfu-doc-manually ()
   (interactive)
@@ -330,15 +325,17 @@ If this is nil, do not resize corfu doc frame automatically."
     (corfu-doc--set-timer)))
 
 (defun corfu-doc--set-timer (&rest _args)
+  ;; hide the doc frame immediately when candidate selection changed
+  (let ((candidate (corfu-doc--get-candidate)))
+    (unless (and (string= candidate corfu-doc--candidate)
+                 (eq (selected-window) corfu-doc--window))
+      (when (and (frame-live-p corfu-doc--frame)
+                 (frame-visible-p corfu-doc--frame))
+        (make-frame-invisible corfu-doc--frame))))
   (when (or (null corfu-doc--timer)
             (eq this-command #'corfu-doc-manually))
     (setq corfu-doc--timer
-          (run-with-timer
-           (if (and (frame-live-p corfu-doc--frame)
-                    (frame-visible-p corfu-doc--frame))
-               0
-             corfu-doc-delay)
-           nil #'corfu-doc-show))))
+          (run-with-timer corfu-doc-delay nil #'corfu-doc-show))))
 
 (defun corfu-doc--cancel-timer ()
   (when (timerp corfu-doc--timer)
@@ -348,6 +345,17 @@ If this is nil, do not resize corfu doc frame automatically."
 (defun corfu-doc-show ()
   (corfu-doc--cancel-timer)
   (corfu-doc--show))
+
+(defun corfu-doc--hide ()
+  (when (frame-live-p corfu-doc--frame)
+    (make-frame-invisible corfu-doc--frame)
+    (with-current-buffer
+        (window-buffer (frame-root-window corfu-doc--frame))
+      (let ((inhibit-read-only t))
+        (erase-buffer)))
+    (setq corfu-doc--candidate nil)
+    (setq corfu-doc--cf-frame-edges nil)
+    (setq corfu-doc--window nil)))
 
 (defun corfu-doc-hide ()
   (when corfu-doc-delay
