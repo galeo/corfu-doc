@@ -212,8 +212,12 @@ If this is nil, do not resize corfu doc frame automatically."
              (buffer-string)))
        (user-error "No documentation available")))))
 
-(defun corfu-doc--calculate-doc-frame-position ()
-  "Calculate doc frame position (x, y), pixel width and height."
+(defun corfu-doc--calculate-doc-frame-position (&optional fwidth fheight)
+  "Calculate doc frame position (x, y), pixel width and height.
+
+The pixel width and height of the doc frame are calculated by the
+documentation content, they can also be specified by optional parameters
+FWIDTH and FHEIGHT."
   (let* (x y
          (space 1)  ;; 1 pixel space between corfu frame and corfu doc frame
          (cf-parent-frame (frame-parent corfu--frame))
@@ -228,27 +232,29 @@ If this is nil, do not resize corfu doc frame automatically."
            (car (cl-subseq (frame-edges cf-parent-frame 'inner) 0 2)))
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
          (cf-doc-frame-width
-           (if (not corfu-doc-resize-frame)
-               ;; left border + left margin + inner width + right margin + right border
-               (+ 1
-                  (alist-get 'left-fringe corfu-doc--frame-parameters 0)
-                  (* (frame-char-width) corfu-doc-max-width)
-                  (alist-get 'right-fringe corfu-doc--frame-parameters 0)
-                  1)
-             (fit-frame-to-buffer corfu-doc--frame
-                                  corfu-doc-max-height nil
-                                  corfu-doc-max-width nil)
-             ;; outer width - left border - left margin - right margin - right border
-             (- (frame-pixel-width corfu-doc--frame)
-                1
-                (alist-get 'left-fringe corfu-doc--frame-parameters 0)
-                (alist-get 'right-fringe corfu-doc--frame-parameters 0)
-                1)))
+           (or fwidth
+               (if (not corfu-doc-resize-frame)
+                   ;; left border + left margin + inner width + right margin + right border
+                   (+ 1
+                      (alist-get 'left-fringe corfu-doc--frame-parameters 0)
+                      (* (frame-char-width) corfu-doc-max-width)
+                      (alist-get 'right-fringe corfu-doc--frame-parameters 0)
+                      1)
+                 (fit-frame-to-buffer corfu-doc--frame
+                                      corfu-doc-max-height nil
+                                      corfu-doc-max-width nil)
+                 ;; outer width - left border - left margin - right margin - right border
+                 (- (frame-pixel-width corfu-doc--frame)
+                    1
+                    (alist-get 'left-fringe corfu-doc--frame-parameters 0)
+                    (alist-get 'right-fringe corfu-doc--frame-parameters 0)
+                    1))))
          (cf-doc-frame-height
-           (if (not corfu-doc-resize-frame)
-               (* (frame-char-height) corfu-doc-max-height)
-             ;; outer height - top border - bottom border
-             (- (frame-pixel-height corfu-doc--frame) 1 1)))
+           (or fheight
+               (if (not corfu-doc-resize-frame)
+                   (* (frame-char-height) corfu-doc-max-height)
+                 ;; outer height - top border - bottom border
+                 (- (frame-pixel-height corfu-doc--frame) 1 1))))
          (display-geometry (assq 'geometry (frame-monitor-attributes corfu--frame)))
          (display-width (nth 3 display-geometry))
          (display-x (nth 1 display-geometry))
@@ -342,15 +348,23 @@ If this is nil, do not resize corfu doc frame automatically."
     (corfu-doc--set-timer)))
 
 (defun corfu-doc--set-timer (&rest _args)
-  ;; hide the doc frame immediately when candidate selection changed
-  (let ((candidate (corfu-doc--get-candidate)))
-    (unless (and (string= candidate corfu-doc--candidate)
-                 (eq (selected-window) corfu-doc--window))
-      (when (and (frame-live-p corfu-doc--frame)
-                 (frame-visible-p corfu-doc--frame))
-        (if (> corfu-doc-delay corfu-doc-hide-threshold)
-            (make-frame-invisible corfu-doc--frame)
-          (corfu-doc--clear-buffer)))))
+  (when (> corfu-doc-delay 0)
+    (let ((candidate (corfu-doc--get-candidate)))
+      (unless (and (string= candidate corfu-doc--candidate)
+                   (eq (selected-window) corfu-doc--window))
+        (when (and (frame-live-p corfu-doc--frame)
+                   (frame-visible-p corfu-doc--frame))
+          (if (> corfu-doc-delay corfu-doc-hide-threshold)
+              (make-frame-invisible corfu-doc--frame)
+            ;; clear buffer and reset doc frame position immediately
+            (corfu-doc--clear-buffer)
+            (let ((cf-frame-edges (frame-edges corfu--frame 'inner)))
+              (unless (equal cf-frame-edges corfu-doc--cf-frame-edges)
+                (apply #'corfu-doc--set-frame-position
+                       corfu-doc--frame
+                       (corfu-doc--calculate-doc-frame-position
+                        (frame-pixel-width corfu-doc--frame)
+                        (frame-pixel-height corfu-doc--frame))))))))))
   (when (or (null corfu-doc--timer)
             (eq this-command #'corfu-doc-manually))
     (setq corfu-doc--timer
