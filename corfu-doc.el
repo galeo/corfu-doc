@@ -331,16 +331,18 @@ FWIDTH and FHEIGHT."
                      (corfu-doc--calculate-doc-frame-position))
               (setq corfu-doc--cf-frame-edges cf-frame-edges)))
         ;; fetch documentation and show
-        (when-let* ((res (ignore-errors (corfu-doc-fetch-documentation)))
-                    (doc (unless (string-empty-p (string-trim res)) res)))
-          (corfu-doc--make-frame doc)
-          (apply #'corfu-doc--set-frame-position
-                 corfu-doc--frame
-                 (corfu-doc--calculate-doc-frame-position))
-          (setq corfu-doc--candidate candidate)
-          (setq corfu-doc--cf-frame-edges cf-frame-edges)))
-      (corfu--echo-refresh)
-      (setq corfu-doc--window (selected-window)))))
+        (if-let* ((res (ignore-errors (corfu-doc-fetch-documentation)))
+                  (doc (unless (string-empty-p (string-trim res)) res)))
+            (progn
+              (corfu-doc--make-frame doc)
+              (apply #'corfu-doc--set-frame-position
+                     corfu-doc--frame
+                     (corfu-doc--calculate-doc-frame-position))
+              (setq corfu-doc--candidate candidate)
+              (setq corfu-doc--cf-frame-edges cf-frame-edges)
+              (corfu--echo-refresh)
+              (setq corfu-doc--window (selected-window)))
+          (corfu-doc-hide))))))
 
 (defun corfu-doc-manually ()
   (interactive)
