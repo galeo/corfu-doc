@@ -43,6 +43,11 @@
   :group 'corfu
   :prefix "corfu-doc-")
 
+(defcustom corfu-doc-auto t
+  "Display documentation popup automatically."
+  :type 'boolean
+  :group 'corfu-doc)
+
 (defcustom corfu-doc-delay 0.2
   "The number of seconds to wait before displaying the documentation popup."
   :type 'float
@@ -315,6 +320,17 @@ FWIDTH and FHEIGHT."
     (let ((inhibit-read-only t))
       (erase-buffer))))
 
+(defun corfu-doc--hide ()
+  (when corfu-doc--timer
+    (cancel-timer corfu-doc--timer)
+    (setq corfu-doc--timer nil))
+  (when (frame-live-p corfu-doc--frame)
+    (make-frame-invisible corfu-doc--frame)
+    (corfu-doc--clear-buffer)
+    (setq corfu-doc--candidate nil)
+    (setq corfu-doc--cf-frame-edges nil)
+    (setq corfu-doc--window nil)))
+
 (defun corfu-doc--show ()
   (when (and (and (fboundp 'corfu-mode) corfu-mode)
              (frame-visible-p corfu--frame))
@@ -342,57 +358,7 @@ FWIDTH and FHEIGHT."
               (setq corfu-doc--cf-frame-edges cf-frame-edges)
               (corfu--echo-refresh)
               (setq corfu-doc--window (selected-window)))
-          (corfu-doc-hide))))))
-
-(defun corfu-doc-manually ()
-  (interactive)
-  (let ((corfu-doc-delay 0))
-    (corfu-doc--set-timer)))
-
-(defun corfu-doc--set-timer (&rest _args)
-  (when (> corfu-doc-delay 0)
-    (let ((candidate (corfu-doc--get-candidate)))
-      (unless (and (string= candidate corfu-doc--candidate)
-                   (eq (selected-window) corfu-doc--window))
-        (when (and (frame-live-p corfu-doc--frame)
-                   (frame-visible-p corfu-doc--frame))
-          (if (> corfu-doc-delay corfu-doc-hide-threshold)
-              (make-frame-invisible corfu-doc--frame)
-            ;; clear buffer and reset doc frame position immediately
-            (corfu-doc--clear-buffer)
-            (let ((cf-frame-edges (frame-edges corfu--frame 'inner)))
-              (unless (equal cf-frame-edges corfu-doc--cf-frame-edges)
-                (apply #'corfu-doc--set-frame-position
-                       corfu-doc--frame
-                       (corfu-doc--calculate-doc-frame-position
-                        (frame-pixel-width corfu-doc--frame)
-                        (frame-pixel-height corfu-doc--frame))))))))))
-  (when (or (null corfu-doc--timer)
-            (eq this-command #'corfu-doc-manually))
-    (setq corfu-doc--timer
-          (run-with-timer corfu-doc-delay nil #'corfu-doc-show))))
-
-(defun corfu-doc--cancel-timer ()
-  (when (timerp corfu-doc--timer)
-    (cancel-timer corfu-doc--timer)
-    (setq corfu-doc--timer nil)))
-
-(defun corfu-doc-show ()
-  (corfu-doc--cancel-timer)
-  (corfu-doc--show))
-
-(defun corfu-doc--hide ()
-  (when (frame-live-p corfu-doc--frame)
-    (make-frame-invisible corfu-doc--frame)
-    (corfu-doc--clear-buffer)
-    (setq corfu-doc--candidate nil)
-    (setq corfu-doc--cf-frame-edges nil)
-    (setq corfu-doc--window nil)))
-
-(defun corfu-doc-hide ()
-  (when corfu-doc-delay
-    (corfu-doc--cancel-timer))
-  (corfu-doc--hide))
+          (corfu-doc--hide))))))
 
 (defun corfu-doc--funcall (function &rest args)
   (when-let ((cf-doc-buf (and (frame-live-p corfu-doc--frame)
@@ -420,23 +386,70 @@ FWIDTH and FHEIGHT."
   :group 'corfu
   (cond
     (corfu-doc-mode
-     (advice-add 'corfu--popup-show :after #'corfu-doc--set-timer)
-     (advice-add 'corfu--popup-hide :after #'corfu-doc-hide))
+     (advice-add 'corfu--popup-show :after #'corfu-doc--auto-show)
+     (advice-add 'corfu--popup-hide :after #'corfu-doc--hide))
     (t
-     (advice-remove 'corfu--popup-show #'corfu-doc--set-timer)
-     (advice-remove 'corfu--popup-hide #'corfu-doc-hide))))
+     (advice-remove 'corfu--popup-show #'corfu-doc--auto-show)
+     (advice-remove 'corfu--popup-hide #'corfu-doc--hide))))
+
+(defun corfu-doc--auto-show (&rest _args)
+  (let ((candidate (corfu-doc--get-candidate)))
+    (unless (and (string= candidate corfu-doc--candidate)
+                 (eq (selected-window) corfu-doc--window))
+      (when (and (frame-live-p corfu-doc--frame)
+                 (frame-visible-p corfu-doc--frame))
+        (if (and corfu-doc-mode corfu-doc-auto)
+            (if (> corfu-doc-delay 0)
+                (if (> corfu-doc-delay corfu-doc-hide-threshold)
+                    (make-frame-invisible corfu-doc--frame)
+                  ;; clear buffer and reset doc frame position immediately
+                  (corfu-doc--clear-buffer)
+                  (let ((cf-frame-edges (frame-edges corfu--frame 'inner)))
+                    (unless (equal cf-frame-edges corfu-doc--cf-frame-edges)
+                      (apply #'corfu-doc--set-frame-position
+                             corfu-doc--frame
+                             (corfu-doc--calculate-doc-frame-position
+                              (frame-pixel-width corfu-doc--frame)
+                              (frame-pixel-height corfu-doc--frame)))))))
+          (corfu-doc--hide)))))
+  (when (and corfu-doc-mode corfu-doc-auto)
+    (setq corfu-doc--timer
+          (run-with-timer corfu-doc-delay nil #'corfu-doc--show))))
+
+(defun corfu-doc--cleanup ()
+  (advice-remove 'corfu--popup-hide #'corfu-doc--cleanup)
+  (unless corfu-doc-mode
+    (advice-remove 'corfu--popup-show #'corfu-doc--auto-show))
+  (corfu-doc--hide))
 
 ;;;###autoload
-(defun corfu-doc-toggle (&optional arg)
-  "Toggle corfu doc on or off.
-With optional ARG, turn corfu doc on if and only if ARG is positive."
+(defun corfu-doc-toggle ()
+  "Toggles the doc popup display or hide.
+
+When using this command to manually hide the doc popup, it will
+not be displayed until this command is called again. Even if the
+corfu doc mode is turned on and `corfu-doc-auto' is set to Non-nil."
+  (interactive)
+  (advice-add 'corfu--popup-hide :after #'corfu-doc--cleanup)
+  (if (and (frame-live-p corfu-doc--frame)
+           (frame-visible-p corfu-doc--frame))
+      (progn
+        (corfu-doc--hide)
+        (advice-remove 'corfu--popup-show #'corfu-doc--auto-show))
+    (corfu-doc--show)
+    (advice-add 'corfu--popup-show :after #'corfu-doc--auto-show)))
+
+;;;###autoload
+(defun toggle-corfu-doc-mode (&optional arg)
+  "Toggles corfu doc mode on or off.
+With optional ARG, turn corfu doc mode on if and only if ARG is positive."
   (interactive "P")
   (if (null arg)
       (setq arg (if corfu-doc-mode -1 1))
     (setq arg (prefix-numeric-value arg)))
   (if (> arg 0)
-      (corfu-doc-manually)
-    (corfu-doc-hide))
+      (corfu-doc--show)
+    (corfu-doc--hide))
   (corfu-doc-mode arg))
 
 
