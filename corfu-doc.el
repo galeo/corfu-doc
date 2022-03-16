@@ -231,10 +231,12 @@ FWIDTH and FHEIGHT."
          (cf-frame-y (cdr cf-frame--pos))
          (cf-frame-width (frame-pixel-width corfu--frame))
          (cf-frame-height (frame-pixel-height corfu--frame))
-         (cf-parent-frame-x  ;; corfu parent frame x pos
+         (cf-parent-frame-pos
            ;; Get inner frame left top edge for corfu frame's parent frame
            ;; See "(elisp) Frame Layout" in Emacs manual
-           (car (cl-subseq (frame-edges cf-parent-frame 'inner) 0 2)))
+           (cl-subseq (frame-edges cf-parent-frame 'inner) 0 2))
+         (cf-parent-frame-x (car cf-parent-frame-pos))
+         (cf-parent-frame-y (cadr cf-parent-frame-pos))
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
          (cf-doc-frame-width
            (or fwidth
@@ -262,6 +264,7 @@ FWIDTH and FHEIGHT."
                  (- (frame-pixel-height corfu-doc--frame) 1 1))))
          (display-geometry (assq 'geometry (frame-monitor-attributes corfu--frame)))
          (display-width (nth 3 display-geometry))
+         (display-height (nth 4 display-geometry))
          (display-x (nth 1 display-geometry))
          (cf-parent-frame-rel-x (- cf-parent-frame-x display-x))
          (display-space-right
@@ -307,7 +310,14 @@ FWIDTH and FHEIGHT."
               (if (< y-on-top-side-of-cf-frame 0)
                   (setq cf-doc-frame-height
                         (- cf-frame-y y 1 1 space))))
-             (t (setq y y-on-bottom-side-of-cf-frame)))))))
+             (t (setq y y-on-bottom-side-of-cf-frame))))))
+      ;; reduce the popup height to avoid exceeding the display
+      (unless (= x cf-frame-x)
+        (let ((lh (default-line-height))
+              (height-remaining (- display-height 1 1 y cf-parent-frame-y)))
+          (when (< height-remaining cf-doc-frame-height)
+            (setq cf-doc-frame-height
+                  (* (floor (/ height-remaining lh)) lh))))))
     (list x y cf-doc-frame-width cf-doc-frame-height)))
 
 (defun corfu-doc--get-candidate ()
