@@ -1,6 +1,8 @@
 #+TITLE: corfu-doc - Documentation popup for Corfu
 #+AUTHOR: Yuwei Tian
 
+#+html: <a href="https://melpa.org/#/corfu-doc"><img alt="MELPA" src="https://melpa.org/packages/corfu-doc-badge.svg"/></a>
+
 * Introduction
 
 Display a documentation popup for completion candidate when using Corfu.
