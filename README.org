@@ -14,7 +14,9 @@ It can be regarded as =company-quickhelp= for [[https://github.com/minad/corfu][
 
 * Installation
 
-Currently =corfu-doc= can be installed with =package-install-file=.
+Corfu-doc is available from [[https://melpa.org/#/corfu-doc][MELPA]], and can be
+installed via =package-install=. You can also manually install it via
+=package-install-file=.
 
 Enable it with =M-x corfu-doc-mode= or by using =corfu-mode-hook=:
 
