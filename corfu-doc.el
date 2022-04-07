@@ -28,7 +28,7 @@
 
 ;;; Commentary:
 ;;
-;; Display candidate's documentation in another frame
+;; Display a documentation popup for completion candidate when using Corfu.
 
 ;;; Code:
 
