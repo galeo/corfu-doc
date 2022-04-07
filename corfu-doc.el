@@ -35,7 +35,6 @@
 (eval-when-compile
   (require 'cl-lib)
   (require 'subr-x))
-(require 'map)
 (require 'corfu)
 
 (defgroup corfu-doc nil
@@ -90,11 +89,11 @@ If this is nil, do not resize corfu doc frame automatically."
 (defvar corfu-doc--frame-parameters
   (let* ((cw (default-font-width))
          (lm (* cw corfu-left-margin-width))
-         (rm (* cw corfu-right-margin-width)))
-    (map-merge 'alist
-               corfu--frame-parameters
-               `((left-fringe . ,(ceiling lm))
-                 (right-fringe . ,(ceiling rm)))))
+         (rm (* cw corfu-right-margin-width))
+         (fp (copy-alist corfu--frame-parameters)))
+    (setf (alist-get 'left-fringe fp) (ceiling lm)
+          (alist-get 'right-fringe fp) (ceiling rm))
+    fp)
   "Default doc child frame parameters.")
 
 (defvar corfu-doc--window nil
