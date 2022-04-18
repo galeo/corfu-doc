@@ -50,6 +50,11 @@ Bind a key to quickly toggle the documentation popup on or off.
 (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 #+end_src
 
+* Contributions
+
+This package will be packaged into corfu in the future as an extension(#8),
+contributions require a copyright assignment to the FSF.
+
 * License
 
 GPLv3
