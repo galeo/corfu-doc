@@ -340,9 +340,10 @@ FWIDTH and FHEIGHT."
     (setq corfu-doc--cf-frame-edges nil)
     (setq corfu-doc--window nil)))
 
-(defun corfu-doc--show ()
+(defun corfu-doc--show (&optional candidate-index)
   (when (and (and (fboundp 'corfu-mode) corfu-mode)
-             (frame-visible-p corfu--frame))
+             (frame-visible-p corfu--frame)
+             (equal candidate-index corfu--index))
     (when-let ((candidate (corfu-doc--get-candidate))
                (cf-frame-edges (frame-edges corfu--frame 'inner)))
       (if (and (string= candidate corfu-doc--candidate)
@@ -423,7 +424,7 @@ FWIDTH and FHEIGHT."
           (corfu-doc--hide)))))
   (when (and corfu-doc-mode corfu-doc-auto)
     (setq corfu-doc--timer
-          (run-with-timer corfu-doc-delay nil #'corfu-doc--show))))
+          (run-with-timer corfu-doc-delay nil #'corfu-doc--show corfu--index))))
 
 (defun corfu-doc--cleanup ()
   (advice-remove 'corfu--popup-hide #'corfu-doc--cleanup)
