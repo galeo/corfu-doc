@@ -340,6 +340,14 @@ FWIDTH and FHEIGHT."
     (setq corfu-doc--cf-frame-edges nil)
     (setq corfu-doc--window nil)))
 
+(defun corfu-doc--show-with-timer (timer-index)
+  (if (equal timer-index corfu--index)
+      ;; Show doc only if index has not changed since timer creation
+      (corfu-doc--show)
+    ;; Otherwise hide the frame
+    (when (frame-live-p corfu-doc--frame)
+      (make-frame-invisible corfu-doc--frame))))
+
 (defun corfu-doc--show ()
   (when (and (and (fboundp 'corfu-mode) corfu-mode)
              (frame-visible-p corfu--frame))
@@ -423,7 +431,7 @@ FWIDTH and FHEIGHT."
           (corfu-doc--hide)))))
   (when (and corfu-doc-mode corfu-doc-auto)
     (setq corfu-doc--timer
-          (run-with-timer corfu-doc-delay nil #'corfu-doc--show))))
+          (run-with-timer corfu-doc-delay nil #'corfu-doc--show-with-timer corfu--index))))
 
 (defun corfu-doc--cleanup ()
   (advice-remove 'corfu--popup-hide #'corfu-doc--cleanup)
