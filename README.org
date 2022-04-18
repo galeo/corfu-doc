@@ -52,7 +52,8 @@ Bind a key to quickly toggle the documentation popup on or off.
 
 * Contributions
 
-This package will be packaged into corfu in the future as an extension(#8),
+This package will be packaged into corfu in the future as an
+extension([[https://github.com/galeo/corfu-doc/issues/8][#8]]),
 contributions require a copyright assignment to the FSF.
 
 * License
