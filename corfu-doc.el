@@ -83,6 +83,26 @@ If this is nil, do not resize corfu doc frame automatically."
   :safe #'booleanp
   :group 'corfu-doc)
 
+(defcustom corfu-doc-display-within-parent-frame nil
+  "Display the doc frame within the parent frame.
+
+If this is nil, it means that the parent frame do not clip child
+frames at the parent frame’s edges. The position of the doc frame is
+calculated based on the size of the display monitor.
+
+Most window-systems clip a child frame at the native edges
+of its parent frame—everything outside these edges
+is usually invisible...
+
+NS builds do not clip child frames at the parent frame’s edges,
+allowing them to be positioned so they do not obscure the parent frame while
+still being visible themselves.
+
+Please see \"(elisp) Child Frames\" in Emacs manual for details."
+  :type 'boolean
+  :safe #'booleanp
+  :group 'corfu-doc)
+
 (defvar corfu-doc--frame nil
   "Doc frame.")
 
@@ -237,6 +257,7 @@ FWIDTH and FHEIGHT."
          (cf-parent-frame-x (car cf-parent-frame-pos))
          (cf-parent-frame-y (cadr cf-parent-frame-pos))
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
+         (cf-parent-frame-height (frame-pixel-height cf-parent-frame))
          (lfw (alist-get 'left-fringe corfu-doc--frame-parameters 0))
          (rfw (alist-get 'right-fringe corfu-doc--frame-parameters 0))
          (cf-doc-frame-width
@@ -261,20 +282,28 @@ FWIDTH and FHEIGHT."
          (display-x (nth 1 display-geometry))
          (cf-parent-frame-rel-x (- cf-parent-frame-x display-x))
          (display-space-right
-           (- display-width (+ (+ cf-frame-x cf-frame-width space)
-                               cf-parent-frame-rel-x)))
-         (display-space-left (- (+ cf-frame-x cf-parent-frame-rel-x)
-                                space)))
-    (let ((_x-on-left-side-of-cf-frame
-            (- cf-frame-x space cf-doc-frame-width))
-          (x-on-right-side-of-cf-frame
-            (+ cf-frame-x cf-frame-width space)))
+           (- display-width
+              (+ (+ cf-frame-x cf-frame-width space) cf-parent-frame-rel-x)))
+         (display-space-left (- (+ cf-frame-x cf-parent-frame-rel-x) space))
+         (cf-parent-frame-space-right
+           (- cf-parent-frame-width (+ cf-frame-x cf-frame-width space)))
+         (cf-parent-frame-space-left (- cf-frame-x space)))
+    (pcase-let ((`(,space-right ,space-left)
+                  (if corfu-doc-display-within-parent-frame
+                      (list cf-parent-frame-space-right
+                            cf-parent-frame-space-left)
+                    (list display-space-right
+                          display-space-left)))
+                (_x-on-left-side-of-cf-frame
+                 (- cf-frame-x space cf-doc-frame-width))
+                (x-on-right-side-of-cf-frame
+                 (+ cf-frame-x cf-frame-width space)))
       (cond
-        ((> display-space-right cf-doc-frame-width)
+        ((> space-right cf-doc-frame-width)
          (setq x x-on-right-side-of-cf-frame
                y cf-frame-y))
-        ((and (< display-space-right cf-doc-frame-width)
-              (> display-space-left cf-doc-frame-width))
+        ((and (< space-right cf-doc-frame-width)
+              (> space-left cf-doc-frame-width))
          (setq x
                ;; space that right edge of the DOC-FRAME
                ;; to the right edge of the parent frame
@@ -286,15 +315,13 @@ FWIDTH and FHEIGHT."
                y cf-frame-y))
         (t
          (setq x cf-frame-x)
-         (let* ((beg (+ (nth 0 completion-in-region--data)
-                        corfu--base))
-                (cf-frame-y-b
+         (let* ((cf-frame-y-b
                   (+ (cadr (window-inside-pixel-edges))
                      (window-tab-line-height)
-                     (or (cdr (posn-x-y (posn-at-point beg))) 0)
+                     (or (cdr (posn-x-y (posn-at-point (point)))) 0)
                      (default-line-height)))
                 (y-on-top-side-of-cf-frame
-                  (- cf-frame-y space cf-doc-frame-height))
+                  (- cf-frame-y space 1 cf-doc-frame-height 1))
                 (y-on-bottom-side-of-cf-frame
                   (+ cf-frame-y cf-frame-height space)))
            (cond
@@ -304,10 +331,19 @@ FWIDTH and FHEIGHT."
                   (setq cf-doc-frame-height
                         (- cf-frame-y y 1 1 space))))
              (t (setq y y-on-bottom-side-of-cf-frame))))))
-      ;; reduce the popup height to avoid exceeding the display
-      (unless (= x cf-frame-x)
-        (let ((lh (default-line-height))
-              (height-remaining (- display-height 1 1 y cf-parent-frame-y)))
+      ;; reduce the popup width and height to avoid exceeding the frame or display
+      (when (= x cf-frame-x)
+        (pcase-let ((cw (frame-char-width))
+                    (lh (default-line-height))
+                    (`(,width-remaining ,height-remaining)
+                      (if corfu-doc-display-within-parent-frame
+                          (list (- cf-parent-frame-width 1 lfw rfw 1 x)
+                                (- cf-parent-frame-height 1 1 y))
+                        (list (- display-width 1 lfw rfw 1 x cf-parent-frame-x)
+                              (- display-height 1 1 y cf-parent-frame-y)))))
+          (when (< width-remaining cf-doc-frame-width)
+            (setq cf-doc-frame-width
+                  (* (floor (/ width-remaining cw)) cw)))
           (when (< height-remaining cf-doc-frame-height)
             (setq cf-doc-frame-height
                   (* (floor (/ height-remaining lh)) lh))))))
