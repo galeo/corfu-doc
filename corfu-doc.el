@@ -237,24 +237,18 @@ FWIDTH and FHEIGHT."
          (cf-parent-frame-x (car cf-parent-frame-pos))
          (cf-parent-frame-y (cadr cf-parent-frame-pos))
          (cf-parent-frame-width (frame-pixel-width cf-parent-frame))
+         (lfw (alist-get 'left-fringe corfu-doc--frame-parameters 0))
+         (rfw (alist-get 'right-fringe corfu-doc--frame-parameters 0))
          (cf-doc-frame-width
            (or fwidth
                (if (not corfu-doc-resize-frame)
                    ;; left border + left margin + inner width + right margin + right border
-                   (+ 1
-                      (alist-get 'left-fringe corfu-doc--frame-parameters 0)
-                      (* (frame-char-width) corfu-doc-max-width)
-                      (alist-get 'right-fringe corfu-doc--frame-parameters 0)
-                      1)
+                   (+ 1 lfw (* (frame-char-width) corfu-doc-max-width) rfw 1)
                  (fit-frame-to-buffer corfu-doc--frame
                                       corfu-doc-max-height nil
                                       corfu-doc-max-width nil)
                  ;; outer width - left border - left margin - right margin - right border
-                 (- (frame-pixel-width corfu-doc--frame)
-                    1
-                    (alist-get 'left-fringe corfu-doc--frame-parameters 0)
-                    (alist-get 'right-fringe corfu-doc--frame-parameters 0)
-                    1))))
+                 (- (frame-pixel-width corfu-doc--frame) 1 lfw rfw 1))))
          (cf-doc-frame-height
            (or fheight
                (if (not corfu-doc-resize-frame)
