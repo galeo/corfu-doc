@@ -434,28 +434,31 @@ FWIDTH and FHEIGHT."
      (advice-remove 'corfu--popup-hide #'corfu-doc--hide))))
 
 (defun corfu-doc--auto-show (&rest _args)
-  (let ((candidate (corfu-doc--get-candidate)))
-    (unless (and (string= candidate corfu-doc--candidate)
-                 (eq (selected-window) corfu-doc--window))
-      (when (and (frame-live-p corfu-doc--frame)
-                 (frame-visible-p corfu-doc--frame))
-        (if (and corfu-doc-mode corfu-doc-auto)
-            (if (> corfu-doc-delay 0)
-                (if (> corfu-doc-delay corfu-doc-hide-threshold)
-                    (make-frame-invisible corfu-doc--frame)
-                  ;; clear buffer and reset doc frame position immediately
-                  (corfu-doc--clear-buffer)
-                  (let ((cf-frame-edges (frame-edges corfu--frame 'inner)))
-                    (unless (equal cf-frame-edges corfu-doc--cf-frame-edges)
-                      (apply #'corfu-doc--set-frame-position
-                             corfu-doc--frame
-                             (corfu-doc--calculate-doc-frame-position
-                              (frame-pixel-width corfu-doc--frame)
-                              (frame-pixel-height corfu-doc--frame)))))))
-          (corfu-doc--hide)))))
-  (when (and corfu-doc-mode corfu-doc-auto)
-    (setq corfu-doc--timer
-          (run-with-timer corfu-doc-delay nil #'corfu-doc--show corfu--index))))
+  (if-let ((candidate (corfu-doc--get-candidate)))
+      (progn
+        (unless (and (string= candidate corfu-doc--candidate)
+                     (eq (selected-window) corfu-doc--window))
+          (when (and (frame-live-p corfu-doc--frame)
+                     (frame-visible-p corfu-doc--frame))
+            (if (and corfu-doc-mode corfu-doc-auto)
+                (if (> corfu-doc-delay 0)
+                    (if (> corfu-doc-delay corfu-doc-hide-threshold)
+                        (make-frame-invisible corfu-doc--frame)
+                      ;; clear buffer and reset doc frame position immediately
+                      (corfu-doc--clear-buffer)
+                      (let ((cf-frame-edges (frame-edges corfu--frame 'inner)))
+                        (unless (equal cf-frame-edges corfu-doc--cf-frame-edges)
+                          (apply #'corfu-doc--set-frame-position
+                                 corfu-doc--frame
+                                 (corfu-doc--calculate-doc-frame-position
+                                  (frame-pixel-width corfu-doc--frame)
+                                  (frame-pixel-height corfu-doc--frame)))))))
+              (corfu-doc--hide))))
+        (when (and corfu-doc-mode corfu-doc-auto)
+          (setq corfu-doc--timer
+                (run-with-timer corfu-doc-delay nil
+                                #'corfu-doc--show corfu--index))))
+    (corfu-doc--hide)))
 
 (defun corfu-doc--cleanup ()
   (advice-remove 'corfu--popup-hide #'corfu-doc--cleanup)
