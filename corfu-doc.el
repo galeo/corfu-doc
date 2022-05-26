@@ -423,7 +423,7 @@ FWIDTH and FHEIGHT."
 ;;;###autoload
 (define-minor-mode corfu-doc-mode
   "Corfu doc minor mode."
-  :global nil
+  :global t
   :group 'corfu
   (cond
     (corfu-doc-mode
