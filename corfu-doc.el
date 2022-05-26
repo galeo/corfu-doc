@@ -401,25 +401,6 @@ FWIDTH and FHEIGHT."
               (setq corfu-doc--window (selected-window)))
           (corfu-doc--hide))))))
 
-(defun corfu-doc--funcall (function &rest args)
-  (when-let ((cf-doc-buf (and (frame-live-p corfu-doc--frame)
-                              (frame-visible-p corfu-doc--frame)
-                              (get-buffer " *corfu-doc*"))))
-    (when (functionp function)
-      (with-selected-frame corfu-doc--frame
-        (with-current-buffer cf-doc-buf
-          (apply function args))))))
-
-;;;###autoload
-(defun corfu-doc-scroll-up (&optional arg)
-  (interactive "^P")
-  (corfu-doc--funcall #'scroll-up-command arg))
-
-;;;###autoload
-(defun corfu-doc-scroll-down (&optional arg)
-  (interactive "^P")
-  (corfu-doc--funcall #'scroll-down-command arg))
-
 ;;;###autoload
 (define-minor-mode corfu-doc-mode
   "Corfu doc minor mode."
@@ -465,6 +446,27 @@ FWIDTH and FHEIGHT."
   (unless corfu-doc-mode
     (advice-remove 'corfu--popup-show #'corfu-doc--auto-show))
   (corfu-doc--hide))
+(defun corfu-doc--funcall (function &rest args)
+  (when-let ((cf-doc-buf (and (frame-live-p corfu-doc--frame)
+                              (frame-visible-p corfu-doc--frame)
+                              (get-buffer " *corfu-doc*"))))
+    (when (functionp function)
+      (with-selected-frame corfu-doc--frame
+        (with-current-buffer cf-doc-buf
+          (apply function args))))))
+
+(defun corfu-doc--popup-scroll (n)
+  (corfu-doc--funcall #'scroll-up n))
+
+;;;###autoload
+(defun corfu-doc-scroll-up (&optional n)
+  (interactive "p")
+  (corfu-doc--popup-scroll n))
+
+;;;###autoload
+(defun corfu-doc-scroll-down (&optional n)
+  (interactive "p")
+  (corfu-doc--popup-scroll (- (or n 1))))
 
 ;;;###autoload
 (defun corfu-doc-toggle ()
