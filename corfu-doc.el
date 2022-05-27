@@ -410,7 +410,7 @@ FWIDTH and FHEIGHT."
     (when-let ((candidate (corfu-doc--get-candidate))
                (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
       (if (corfu-doc--should-refresh-popup candidate)
-          (corfu-doc--refresh-popup cf-popup-edges)
+          (corfu-doc--refresh-popup)
         ;; fetch documentation and show
         (if-let* ((doc (corfu-doc--get-doc)))
             (progn
