@@ -380,13 +380,15 @@ FWIDTH and FHEIGHT."
 
 (defun corfu-doc--refresh-popup ()
   "Update the position of the doc popup when corfu popup edges changed."
-  (make-frame-visible corfu-doc--frame)
-  (apply #'corfu-doc--set-frame-position
-         corfu-doc--frame
-         (corfu-doc--calculate-doc-frame-position
-          (frame-pixel-width corfu-doc--frame)
-          (frame-pixel-height corfu-doc--frame)))
-  (setq corfu-doc--cf-popup-edges (corfu-doc--get-cf-popup-edges)))
+  (unless (corfu-doc--popup-visible-p)
+    (make-frame-visible corfu-doc--frame))
+  (when (corfu-doc--cf-popup-edges-changed-p)
+    (apply #'corfu--set-frame-position
+           corfu-doc--frame
+           (corfu-doc--calculate-doc-frame-position
+            (frame-pixel-width corfu-doc--frame)
+            (frame-pixel-height corfu-doc--frame)))
+    (setq corfu-doc--cf-popup-edges (corfu-doc--get-cf-popup-edges))))
 
 (defun corfu-doc--update-popup (doc)
   (corfu-doc--make-frame doc)
@@ -395,7 +397,8 @@ FWIDTH and FHEIGHT."
          (corfu-doc--calculate-doc-frame-position)))
 
 (defun corfu-doc--cf-popup-visible-p ()
-  (frame-visible-p corfu--frame))
+  (and (frame-live-p corfu--frame)
+       (frame-visible-p corfu--frame)))
 
 (defun corfu-doc--should-show-popup (&optional candidate-index)
   (and (and (fboundp 'corfu-mode) corfu-mode)
@@ -463,17 +466,16 @@ FWIDTH and FHEIGHT."
 (defun corfu-doc--cf-popup-edges-changed-p ()
   (not (equal (corfu-doc--get-cf-popup-edges) corfu-doc--cf-popup-edges)))
 
-(defun corfu-doc--popup-transit (candidate)
-  (unless (corfu-doc--should-refresh-popup candidate)
-    (when (corfu-doc--popup-visible-p)
-      (if (and corfu-doc-mode corfu-doc-auto (> corfu-doc-delay 0))
-          (if (> corfu-doc-delay corfu-doc-hide-threshold)
-              (corfu-doc--make-popup-invisible)
-            ;; clear buffer and update popup position immediately
-            (corfu-doc--clear-buffer)
-            (when (corfu-doc--cf-popup-edges-changed-p)
-              (corfu-doc--refresh-popup)))
-        (corfu-doc--popup-hide)))))
+(defun corfu-doc--popup-transit ()
+  (when (corfu-doc--popup-visible-p)
+    (if (and corfu-doc-mode corfu-doc-auto (> corfu-doc-delay 0))
+        (if (> corfu-doc-delay corfu-doc-hide-threshold)
+            (corfu-doc--make-popup-invisible)
+          ;; clear buffer and update popup position immediately
+          (corfu-doc--clear-buffer)
+          (when (corfu-doc--cf-popup-edges-changed-p)
+            (corfu-doc--refresh-popup)))
+      (corfu-doc--popup-hide))))
 
 (defun corfu-doc--popup-show (&rest _args)
   (when corfu-doc--auto-timer
@@ -482,11 +484,13 @@ FWIDTH and FHEIGHT."
   (when (corfu-doc--popup-support-p)
     (if-let ((candidate (corfu-doc--get-candidate)))
         (progn
-          (corfu-doc--popup-transit candidate)
-          (when (and corfu-doc-mode corfu-doc-auto)
-            (setq corfu-doc--auto-timer
-                  (run-with-timer corfu-doc-delay nil
-                   #'corfu-doc--manual-popup-show corfu--index))))
+          (if (corfu-doc--should-refresh-popup candidate)
+              (corfu-doc--refresh-popup)
+            (corfu-doc--popup-transit)
+            (when (and corfu-doc-mode corfu-doc-auto)
+              (setq corfu-doc--auto-timer
+                    (run-with-timer corfu-doc-delay nil
+                     #'corfu-doc--manual-popup-show corfu--index)))))
       (corfu-doc--popup-hide))))
 
 (defun corfu-doc--funcall (function &rest args)
