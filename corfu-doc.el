@@ -383,7 +383,7 @@ FWIDTH and FHEIGHT."
   (unless (corfu-doc--popup-visible-p)
     (make-frame-visible corfu-doc--frame))
   (when (corfu-doc--cf-popup-edges-changed-p)
-    (apply #'corfu--set-frame-position
+    (apply #'corfu-doc--set-frame-position
            corfu-doc--frame
            (corfu-doc--calculate-doc-frame-position
             (frame-pixel-width corfu-doc--frame)
