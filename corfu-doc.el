@@ -80,7 +80,7 @@ If this is nil, do not resize corfu doc frame automatically."
   :type 'boolean
   :safe #'booleanp)
 
-(defcustom corfu-doc-display-within-parent-frame nil
+(defcustom corfu-doc-display-within-parent-frame t
   "Display the doc popup within the parent frame.
 
 If this is nil, it means that the parent frame do not clip child

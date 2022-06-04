@@ -50,11 +50,11 @@ Bind a key to quickly toggle the documentation popup on or off.
 (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 #+end_src
 
-** Display the doc frame within the parent frame
+** Display the doc frame beyond the parent frame
 
-You could choose to display the doc frame within the parent frame by setting
-=corfu-doc-display-within-parent-frame= to non-nil. Otherwise, the position of
-the doc frame is calculated base on the size of the display monitor.
+The doc frame is displayed within the parent frame by default.
+However, the position of the doc frame can be calculated base on the size of
+the display monitor if =corfu-doc-display-within-parent-frame= is set to =nil=.
 
 #+begin_quote
 Most window-systems clip a child frame at the native edges (see [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Geometry.html][Frame Geometry]])
