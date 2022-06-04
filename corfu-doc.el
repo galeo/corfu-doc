@@ -87,10 +87,10 @@ If this is nil, do not resize corfu doc frame automatically."
   :group 'corfu-doc)
 
 (defcustom corfu-doc-display-within-parent-frame nil
-  "Display the doc frame within the parent frame.
+  "Display the doc popup within the parent frame.
 
 If this is nil, it means that the parent frame do not clip child
-frames at the parent frame’s edges. The position of the doc frame is
+frames at the parent frame’s edges. The position of the doc popup is
 calculated based on the size of the display monitor.
 
 Most window-systems clip a child frame at the native edges
@@ -123,10 +123,10 @@ Please see \"(elisp) Child Frames\" in Emacs manual for details."
   "Corfu doc auto idle timer.")
 
 (defvar corfu-doc--cf-window nil
-  "Current window corfu is in.")
+  "Window where the corfu popup is located.")
 
 (defvar-local corfu-doc--candidate nil
-  "Completion candidate to show doc for.")
+  "Completion candidate for the doc popup.")
 
 (defvar-local corfu-doc--cf-popup-edges nil
   "Coordinates of the corfu popup's edges.
@@ -139,6 +139,14 @@ relative to LEFT and TOP which are both zero.
 See `frame-edges' for details.")
 
 (defun corfu-doc--set-vars (candidate cf-popup-edges window)
+  "Record the values of local variables required by the doc popup.
+
+CANDIDATE is the current completion candidate the doc is for.
+
+CF-POPUP-EDGES is the coordinates of the current corfu popup's edges.
+See `corfu-doc--cf-popup-edges' for details.
+
+WINDOW is the current window where the corfu popup is located."
   (setq corfu-doc--candidate candidate)
   (setq corfu-doc--cf-popup-edges cf-popup-edges)
   (setq corfu-doc--cf-window window))
@@ -232,7 +240,7 @@ See `frame-edges' for details.")
 
 ;; Function adapted from corfu.el by Daniel Mendler
 (defun corfu-doc-fetch-documentation ()
-  "Fetch documentation buffer of current candidate."
+  "Fetch documentation buffer of the current completion candidate."
   (cond
     ((= corfu--total 0)
      (user-error "No candidates"))
@@ -252,14 +260,18 @@ See `frame-edges' for details.")
        (user-error "No documentation available")))))
 
 (defun corfu-doc--get-doc ()
+  "Get the documentation for the current completion candidate.
+
+The documentation is trimmed.
+Returns nil if an error occurs or the documentation content is empty."
   (when-let ((doc (ignore-errors (corfu-doc-fetch-documentation))))
     (unless (string-empty-p (string-trim doc))
       doc)))
 
-  "Calculate doc frame position (x, y), pixel width and height.
 (defun corfu-doc--calc-popup-position (&optional fwidth fheight)
+  "Calculate doc popup position (x, y), pixel width and height.
 
-The pixel width and height of the doc frame are calculated by the
+The pixel width and height of the doc popup are calculated by the
 documentation content, they can also be specified by optional parameters
 FWIDTH and FHEIGHT."
   (let* (x y
@@ -372,13 +384,19 @@ FWIDTH and FHEIGHT."
     (list x y cf-doc-frame-width cf-doc-frame-height)))
 
 (defun corfu-doc--get-candidate ()
+  "Get the current completion candidate."
   (and (> corfu--total 0)
        (nth corfu--index corfu--candidates)))
 
 (defun corfu-doc--get-cf-popup-edges ()
+  "Get coordinates of the corfu popup."
   (frame-edges corfu--frame 'inner))
 
 (defun corfu-doc--should-refresh-popup (candidate)
+  "Determine whether the doc popup should be refreshed.
+
+CANDIDATE is the current completion candidate, it should be
+compared with the value recorded by `corfu-doc--candiate'."
   (and (string= candidate corfu-doc--candidate)
        (eq (selected-window) corfu-doc--cf-window)
        (frame-live-p corfu-doc--frame)))
@@ -396,24 +414,33 @@ FWIDTH and FHEIGHT."
     (setq corfu-doc--cf-popup-edges (corfu-doc--get-cf-popup-edges))))
 
 (defun corfu-doc--update-popup (doc)
+  "Update the documentation popup with the DOC content."
   (corfu-doc--make-frame doc)
   (apply #'corfu-doc--set-frame-position
          corfu-doc--frame
          (corfu-doc--calc-popup-position)))
 
 (defun corfu-doc--cf-popup-visible-p ()
+  "Determine whether the corfu popup is visible."
   (and (frame-live-p corfu--frame)
        (frame-visible-p corfu--frame)))
 
 (defun corfu-doc--should-show-popup (&optional candidate-index)
+  "Determine whether the doc popup should be showed.
+
+The optional CANDIDATE-INDEX is the the current completion candidate index,
+it should be compared with the value recorded by `corfu--index'."
   (and (and (fboundp 'corfu-mode) corfu-mode)
        (corfu-doc--cf-popup-visible-p)
        (or (null candidate-index)
            (equal candidate-index corfu--index))))
 
 (defun corfu-doc--manual-popup-show (&optional candidate-index)
-    (error "Corfu-doc requires child frames to display documentation."))
+  "Show the doc popup manually.
+
+The optional CANDIDATE-INDEX is the the current completion candidate index."
   (unless (corfu--popup-support-p)
+    (error "Corfu-doc requires child frames to display documentation"))
   (when (corfu-doc--should-show-popup candidate-index)
     (when-let ((candidate (corfu-doc--get-candidate))
                (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
@@ -428,18 +455,21 @@ FWIDTH and FHEIGHT."
           (corfu-doc--popup-hide))))))
 
 (defun corfu-doc--clear-buffer ()
+  "Clear the doc popup buffer content."
   (with-current-buffer
       (window-buffer (frame-root-window corfu-doc--frame))
     (let ((inhibit-read-only t))
       (erase-buffer))))
 
 (defun corfu-doc--popup-hide ()
+  "Clear the doc popup buffer content and hide it."
   (when (frame-live-p corfu-doc--frame)
     (make-frame-invisible corfu-doc--frame)
     (corfu-doc--clear-buffer)
     (corfu-doc--set-vars nil nil nil)))
 
 (defun corfu-doc--cleanup ()
+  "Cleanup advices and hide the doc popup."
   (advice-remove 'corfu--popup-hide #'corfu-doc--cleanup)
   (unless corfu-doc-mode
     (advice-remove 'corfu--popup-show #'corfu-doc--popup-show))
@@ -459,16 +489,21 @@ FWIDTH and FHEIGHT."
      (advice-remove 'corfu--popup-hide #'corfu-doc--popup-hide))))
 
 (defun corfu-doc--popup-visible-p ()
+  "Determine whether the doc popup is visible."
   (and (frame-live-p corfu-doc--frame)
        (frame-visible-p corfu-doc--frame)))
 
 (defun corfu-doc--make-popup-invisible ()
+  "Make the doc popup invisible."
   (make-frame-invisible corfu-doc--frame))
 
 (defun corfu-doc--cf-popup-edges-changed-p ()
-  (not (equal (corfu-doc--get-cf-popup-edges) corfu-doc--cf-popup-edges)))
+  "Determine whether the coordinates of the corfu popup have changed."
+  (not (equal (corfu-doc--get-cf-popup-edges)
+              corfu-doc--cf-popup-edges)))
 
 (defun corfu-doc--popup-transition ()
+  "Transition when showing or updating the doc popup."
   (when (corfu-doc--popup-visible-p)
     (if (and corfu-doc-mode corfu-doc-auto)
         (when (and (not (null corfu-doc-delay)) (> corfu-doc-delay 0))
@@ -481,6 +516,7 @@ FWIDTH and FHEIGHT."
       (corfu-doc--popup-hide))))
 
 (defun corfu-doc--popup-show (&rest _args)
+  "Show doc popup for the current completion candidate."
   (when corfu-doc--auto-timer
     (cancel-timer corfu-doc--auto-timer)
     (setq corfu-doc--auto-timer nil))
@@ -497,6 +533,7 @@ FWIDTH and FHEIGHT."
       (corfu-doc--popup-hide))))
 
 (defun corfu-doc--funcall (function &rest args)
+  "Call FUNCTION with ARGS in the documentation buffer."
   (when-let ((cf-doc-buf
               (and (corfu-doc--popup-visible-p)
                    (get-buffer " *corfu-doc*"))))
@@ -506,21 +543,30 @@ FWIDTH and FHEIGHT."
           (apply function args))))))
 
 (defun corfu-doc--popup-scroll (n)
+  "Scroll text of the documentaion buffer window upward N lines.
+
+See `scroll-up' for details."
   (corfu-doc--funcall #'scroll-up n))
 
 ;;;###autoload
 (defun corfu-doc-scroll-up (&optional n)
+  "Scroll text of doc popup window upward N lines.
+
+If ARG is omitted or nil, scroll upward by a near full screen."
   (interactive "p")
   (corfu-doc--popup-scroll n))
 
 ;;;###autoload
 (defun corfu-doc-scroll-down (&optional n)
+  "Scroll text of doc popup window down N lines.
+
+If ARG is omitted or nil, scroll down by a near full screen."
   (interactive "p")
   (corfu-doc--popup-scroll (- (or n 1))))
 
 ;;;###autoload
 (defun corfu-doc-toggle ()
-  "Toggles the doc popup display or hide.
+  "Toggle the doc popup display or hide.
 
 When using this command to manually hide the doc popup, it will
 not be displayed until this command is called again. Even if the
@@ -536,7 +582,8 @@ corfu doc mode is turned on and `corfu-doc-auto' is set to Non-nil."
 
 ;;;###autoload
 (defun toggle-corfu-doc-mode (&optional arg)
-  "Toggles corfu doc mode on or off.
+  "Toggle corfu doc mode on or off.
+
 With optional ARG, turn corfu doc mode on if and only if ARG is positive."
   (interactive "P")
   (if (null arg)
