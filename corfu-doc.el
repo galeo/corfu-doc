@@ -263,7 +263,9 @@ The pixel width and height of the doc frame are calculated by the
 documentation content, they can also be specified by optional parameters
 FWIDTH and FHEIGHT."
   (let* (x y
-         (space 1)  ;; 1 pixel space between corfu frame and corfu doc frame
+         ;; space between corfu popup and corfu doc popup
+         ;; set -1 to share the border
+         (space -1)
          (cf-parent-frame (frame-parent corfu--frame))
          (cf-frame--pos (frame-position corfu--frame))
          (cf-frame-x (car cf-frame--pos))  ;; corfu--frame x pos
