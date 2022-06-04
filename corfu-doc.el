@@ -412,8 +412,8 @@ FWIDTH and FHEIGHT."
            (equal candidate-index corfu--index))))
 
 (defun corfu-doc--manual-popup-show (&optional candidate-index)
-  (unless (corfu-doc--popup-support-p)
     (error "Corfu-doc requires child frames to display documentation."))
+  (unless (corfu--popup-support-p)
   (when (corfu-doc--should-show-popup candidate-index)
     (when-let ((candidate (corfu-doc--get-candidate))
                (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
@@ -458,9 +458,6 @@ FWIDTH and FHEIGHT."
      (advice-remove 'corfu--popup-show #'corfu-doc--popup-show)
      (advice-remove 'corfu--popup-hide #'corfu-doc--popup-hide))))
 
-(defun corfu-doc--popup-support-p ()
-  (display-graphic-p))
-
 (defun corfu-doc--popup-visible-p ()
   (and (frame-live-p corfu-doc--frame)
        (frame-visible-p corfu-doc--frame)))
@@ -487,7 +484,7 @@ FWIDTH and FHEIGHT."
   (when corfu-doc--auto-timer
     (cancel-timer corfu-doc--auto-timer)
     (setq corfu-doc--auto-timer nil))
-  (when (corfu-doc--popup-support-p)
+  (when (corfu--popup-support-p)
     (if-let ((candidate (corfu-doc--get-candidate)))
         (progn
           (if (corfu-doc--should-refresh-popup candidate)
