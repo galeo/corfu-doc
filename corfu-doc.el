@@ -48,9 +48,12 @@
   :group 'corfu-doc)
 
 (defcustom corfu-doc-delay 0.1
-  "The number of seconds to wait before displaying the documentation popup."
-  :type 'float
-  :safe #'floatp
+  "The number of seconds to wait before displaying the documentation popup.
+
+The value of nil means no delay."
+  :type '(choice (const :tag "never (nil)" nil)
+                 (const :tag "immediate (0)" 0)
+                 (number :tag "seconds"))
   :group 'corfu-doc)
 
 (defcustom corfu-doc-hide-threshold 0.2
@@ -468,13 +471,14 @@ FWIDTH and FHEIGHT."
 
 (defun corfu-doc--popup-transit ()
   (when (corfu-doc--popup-visible-p)
-    (if (and corfu-doc-mode corfu-doc-auto (> corfu-doc-delay 0))
-        (if (> corfu-doc-delay corfu-doc-hide-threshold)
-            (corfu-doc--make-popup-invisible)
-          ;; clear buffer and update popup position immediately
-          (corfu-doc--clear-buffer)
-          (when (corfu-doc--cf-popup-edges-changed-p)
-            (corfu-doc--refresh-popup)))
+    (if (and corfu-doc-mode corfu-doc-auto)
+        (when (and (not (null corfu-doc-delay)) (> corfu-doc-delay 0))
+          (if (> corfu-doc-delay corfu-doc-hide-threshold)
+              (corfu-doc--make-popup-invisible)
+            ;; clear buffer and update popup position immediately
+            (corfu-doc--clear-buffer)
+            (when (corfu-doc--cf-popup-edges-changed-p)
+              (corfu-doc--refresh-popup))))
       (corfu-doc--popup-hide))))
 
 (defun corfu-doc--popup-show (&rest _args)
