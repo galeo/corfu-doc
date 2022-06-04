@@ -111,11 +111,11 @@ Please see \"(elisp) Child Frames\" in Emacs manual for details."
 
 (defvar corfu-doc--frame-parameters
   (let* ((cw (default-font-width))
-         (lm (* cw corfu-left-margin-width))
-         (rm (* cw corfu-right-margin-width))
+         (lmw (* cw corfu-left-margin-width))
+         (rmw (* cw corfu-right-margin-width))
          (fp (copy-alist corfu--frame-parameters)))
-    (setf (alist-get 'left-fringe fp) (ceiling lm)
-          (alist-get 'right-fringe fp) (ceiling rm))
+    (setf (alist-get 'left-fringe fp) (ceiling lmw)
+          (alist-get 'right-fringe fp) (ceiling rmw))
     fp)
   "Default doc child frame parameters.")
 
