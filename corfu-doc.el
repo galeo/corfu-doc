@@ -471,7 +471,7 @@ FWIDTH and FHEIGHT."
 (defun corfu-doc--cf-popup-edges-changed-p ()
   (not (equal (corfu-doc--get-cf-popup-edges) corfu-doc--cf-popup-edges)))
 
-(defun corfu-doc--popup-transit ()
+(defun corfu-doc--popup-transition ()
   (when (corfu-doc--popup-visible-p)
     (if (and corfu-doc-mode corfu-doc-auto)
         (when (and (not (null corfu-doc-delay)) (> corfu-doc-delay 0))
@@ -492,7 +492,7 @@ FWIDTH and FHEIGHT."
         (progn
           (if (corfu-doc--should-refresh-popup candidate)
               (corfu-doc--refresh-popup)
-            (corfu-doc--popup-transit)
+            (corfu-doc--popup-transition)
             (when (and corfu-doc-mode corfu-doc-auto)
               (setq corfu-doc--auto-timer
                     (run-with-timer corfu-doc-delay nil
