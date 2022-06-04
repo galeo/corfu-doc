@@ -256,8 +256,8 @@ See `frame-edges' for details.")
     (unless (string-empty-p (string-trim doc))
       doc)))
 
-(defun corfu-doc--calculate-doc-frame-position (&optional fwidth fheight)
   "Calculate doc frame position (x, y), pixel width and height.
+(defun corfu-doc--calc-popup-position (&optional fwidth fheight)
 
 The pixel width and height of the doc frame are calculated by the
 documentation content, they can also be specified by optional parameters
@@ -390,7 +390,7 @@ FWIDTH and FHEIGHT."
   (when (corfu-doc--cf-popup-edges-changed-p)
     (apply #'corfu-doc--set-frame-position
            corfu-doc--frame
-           (corfu-doc--calculate-doc-frame-position
+           (corfu-doc--calc-popup-position
             (frame-pixel-width corfu-doc--frame)
             (frame-pixel-height corfu-doc--frame)))
     (setq corfu-doc--cf-popup-edges (corfu-doc--get-cf-popup-edges))))
@@ -399,7 +399,7 @@ FWIDTH and FHEIGHT."
   (corfu-doc--make-frame doc)
   (apply #'corfu-doc--set-frame-position
          corfu-doc--frame
-         (corfu-doc--calculate-doc-frame-position)))
+         (corfu-doc--calc-popup-position)))
 
 (defun corfu-doc--cf-popup-visible-p ()
   (and (frame-live-p corfu--frame)
