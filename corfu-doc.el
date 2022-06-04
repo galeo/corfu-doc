@@ -44,8 +44,7 @@
 
 (defcustom corfu-doc-auto t
   "Display documentation popup automatically."
-  :type 'boolean
-  :group 'corfu-doc)
+  :type 'boolean)
 
 (defcustom corfu-doc-delay 0.1
   "The number of seconds to wait before displaying the documentation popup.
@@ -53,8 +52,7 @@
 The value of nil means no delay."
   :type '(choice (const :tag "never (nil)" nil)
                  (const :tag "immediate (0)" 0)
-                 (number :tag "seconds"))
-  :group 'corfu-doc)
+                 (number :tag "seconds")))
 
 (defcustom corfu-doc-hide-threshold 0.2
   "Threshold value to hide the documentation popup when browsing candidates.
@@ -63,28 +61,24 @@ When the selected candidate is changed, if the value of `corfu-doc-delay'
 is greater than this threshold value, the documentation popup frame will
 be hided immediately. Else, just clear the doc frame content."
   :type 'float
-  :safe #'floatp
-  :group 'corfu-doc)
+  :safe #'floatp)
 
 (defcustom corfu-doc-max-width 60
   "The max width of the corfu doc frame in characters."
   :type 'integer
-  :safe #'integerp
-  :group 'corfu-doc)
+  :safe #'integerp)
 
 (defcustom corfu-doc-max-height 10
   "The max height of the corfu doc frame in characters."
   :type 'integer
-  :safe #'integerp
-  :group 'corfu-doc)
+  :safe #'integerp)
 
 (defcustom corfu-doc-resize-frame t
   "Non-nil means resize the corfu doc frame automatically.
 
 If this is nil, do not resize corfu doc frame automatically."
   :type 'boolean
-  :safe #'booleanp
-  :group 'corfu-doc)
+  :safe #'booleanp)
 
 (defcustom corfu-doc-display-within-parent-frame nil
   "Display the doc popup within the parent frame.
@@ -103,8 +97,7 @@ still being visible themselves.
 
 Please see \"(elisp) Child Frames\" in Emacs manual for details."
   :type 'boolean
-  :safe #'booleanp
-  :group 'corfu-doc)
+  :safe #'booleanp)
 
 (defvar corfu-doc--frame nil
   "Doc frame.")
