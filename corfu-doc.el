@@ -6,7 +6,7 @@
 ;; URL: https://github.com/galeo/corfu-doc
 ;; Version: 0.6.3
 ;; Keywords: corfu popup documentation convenience
-;; Package-Requires: ((emacs "27.1")(corfu "0.16.0"))
+;; Package-Requires: ((emacs "27.1")(corfu "0.25"))
 
 ;; This file is not part of GNU Emacs.
 
