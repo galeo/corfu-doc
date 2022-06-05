@@ -226,33 +226,31 @@ WINDOW is the current window where the corfu popup is located."
   (set-frame-size frame width height t)
   (make-frame-visible frame))
 
-;; Function adapted from corfu.el by Daniel Mendler
-(defun corfu-doc-fetch-documentation ()
-  "Fetch documentation buffer of the current completion candidate."
-  (cond
-    ((= corfu--total 0)
-     (user-error "No candidates"))
-    ((< corfu--index 0)
-     (user-error "No candidate selected"))
-    (t
-     (if-let* ((fun (plist-get corfu--extra :company-doc-buffer))
-               (res
-                ;; fix showing candidate location when fetch helpful documentation
-                (save-excursion
-                  (let ((inhibit-message t)
-                        (message-log-max nil))
-                    (funcall fun (nth corfu--index corfu--candidates))))))
-         (let ((buf (or (car-safe res) res)))
-           (with-current-buffer buf
-             (buffer-string)))
-       (user-error "No documentation available")))))
-
 (defun corfu-doc--get-doc ()
   "Get the documentation for the current completion candidate.
 
 The documentation is trimmed.
 Returns nil if an error occurs or the documentation content is empty."
-  (when-let ((doc (ignore-errors (corfu-doc-fetch-documentation))))
+  (when-let
+      ((doc
+        (ignore-errors
+          (cond
+            ((= corfu--total 0) nil)  ;; No candidates
+            ((< corfu--index 0) nil)  ;; No candidate selected
+            (t
+             (if-let*
+                 ((fun (plist-get corfu--extra :company-doc-buffer))
+                  (res
+                   ;; fix showing candidate location
+                   ;; when fetch helpful documentation
+                   (save-excursion
+                     (let ((inhibit-message t)
+                           (message-log-max nil))
+                       (funcall fun (nth corfu--index corfu--candidates))))))
+                 (let ((buf (or (car-safe res) res)))
+                   (with-current-buffer buf
+                     (buffer-string)))
+               nil))))))  ;; No documentation available
     (unless (string-empty-p (string-trim doc))
       doc)))
 
