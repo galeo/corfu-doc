@@ -478,9 +478,11 @@ The optional CANDIDATE-INDEX is the the current completion candidate index."
   :group 'corfu
   (cond
     (corfu-doc-mode
+     (corfu-doc--manual-popup-show)
      (advice-add 'corfu--popup-show :after #'corfu-doc--popup-show)
      (advice-add 'corfu--popup-hide :after #'corfu-doc--popup-hide))
     (t
+     (corfu-doc--popup-hide)
      (advice-remove 'corfu--popup-show #'corfu-doc--popup-show)
      (advice-remove 'corfu--popup-hide #'corfu-doc--popup-hide))))
 
@@ -572,18 +574,7 @@ corfu doc mode is turned on and `corfu-doc-auto' is set to Non-nil."
     (advice-add 'corfu--popup-show :after #'corfu-doc--popup-show)))
 
 ;;;###autoload
-(defun toggle-corfu-doc-mode (&optional arg)
-  "Toggle corfu doc mode on or off.
-
-With optional ARG, turn corfu doc mode on if and only if ARG is positive."
-  (interactive "P")
-  (if (null arg)
-      (setq arg (if corfu-doc-mode -1 1))
-    (setq arg (prefix-numeric-value arg)))
-  (if (> arg 0)
-      (corfu-doc--manual-popup-show)
-    (corfu-doc--popup-hide))
-  (corfu-doc-mode arg))
+(define-obsolete-function-alias 'toggle-corfu-doc-mode #'corfu-doc-mode "0.7")
 
 
 (provide 'corfu-doc)
