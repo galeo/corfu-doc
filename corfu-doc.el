@@ -416,7 +416,7 @@ compared with the value recorded by `corfu-doc--candiate'."
 
 The optional CANDIDATE-INDEX is the the current completion candidate index,
 it should be compared with the value recorded by `corfu--index'."
-  (and (and (fboundp 'corfu-mode) corfu-mode)
+  (and corfu-mode
        (corfu-doc--cf-popup-visible-p)
        (or (null candidate-index)
            (equal candidate-index corfu--index))))
