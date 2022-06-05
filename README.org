@@ -24,14 +24,6 @@ Enable it with =M-x corfu-doc-mode= or by using =corfu-mode-hook=:
 (add-hook 'corfu-mode-hook #'corfu-doc-mode)
 #+end_src
 
-You can adjust the time it takes to show the documentation popup by changing
-=corfu-doc-delay=. You could control whether to hide the documentation popup
-immediately or just clear the documentation frame content when browsing the
-candidates by setting the value of =corfu-doc-hide-threshold= smaller or greater
-than the value of =corfu-doc-delay=. You could try to set the value of
-=corfu-doc-delay= to =0= to reduce the popup flickering if your computer has
-good performance, it may cause operation jams.
-
 ** Scroll the documentation
 
 Bind keys =M-p= and =M-n= to commands =corfu-doc-scroll-down= and

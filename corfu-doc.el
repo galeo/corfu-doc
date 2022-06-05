@@ -54,13 +54,27 @@ The value of nil means no delay."
                  (const :tag "immediate (0)" 0)
                  (number :tag "seconds")))
 
-(defcustom corfu-doc-hide-threshold 0.2
-  "Threshold value to hide the documentation popup when browsing candidates.
+(defcustom corfu-doc-transition nil
+  "The method to transition the documentaion popup when browsing candidates.
 
-When the selected candidate is changed, if the value of `corfu-doc-delay'
-is greater than this threshold value, the documentation popup frame will
-be hided immediately. Else, just clear the doc frame content."
-  :type 'float)
+The documentaion popup transition only works when `corfu-auto-delay'
+is non-nil and its value is greater than 0.
+
+If this is nil, there is no transition (do nothing), the doc popup
+preserves the content of the last candidate.
+
+If the value is 'clear, the documentation content of the last candidate
+will be cleared on documentation popup transition.
+
+If the value is 'hide, the documentation popup will be hidden
+when brwosing candidates.
+
+It is recommended to select the corresponding transition method
+according to the value of `corfu-doc-delay' to reduce flicker or
+documentation update delay."
+  :type '(choice (const :tag "no transition (nil)" nil)
+          (const :tag "clear content" clear)
+          (const :tag "hide popup" hide)))
 
 (defcustom corfu-doc-max-width 60
   "The max width of the corfu doc frame in characters."
@@ -489,16 +503,16 @@ The optional CANDIDATE-INDEX is the the current completion candidate index."
               corfu-doc--cf-popup-edges)))
 
 (defun corfu-doc--popup-transition ()
-  "Transition when showing or updating the doc popup."
+  "Transition when updating the documentation popup."
   (when (corfu-doc--popup-visible-p)
     (if (and corfu-doc-mode corfu-doc-auto)
         (when (and (not (null corfu-doc-delay)) (> corfu-doc-delay 0))
-          (if (> corfu-doc-delay corfu-doc-hide-threshold)
-              (corfu-doc--make-popup-invisible)
-            ;; clear buffer and update popup position immediately
-            (corfu-doc--clear-buffer)
-            (when (corfu-doc--cf-popup-edges-changed-p)
-              (corfu-doc--refresh-popup))))
+          (pcase corfu-doc-transition
+            ('clear
+             (corfu-doc--clear-buffer)
+             (corfu-doc--refresh-popup))
+            ('hide (corfu-doc--make-popup-invisible))
+            (_ (corfu-doc--refresh-popup))))
       (corfu-doc--popup-hide))))
 
 (defun corfu-doc--popup-show (&rest _args)
