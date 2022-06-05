@@ -4,7 +4,7 @@
 
 ;; Author: Yuwei Tian <ibluefocus@NOSPAM.gmail.com>
 ;; URL: https://github.com/galeo/corfu-doc
-;; Version: 0.6.3
+;; Version: 0.7
 ;; Keywords: corfu popup documentation convenience
 ;; Package-Requires: ((emacs "27.1")(corfu "0.25"))
 
