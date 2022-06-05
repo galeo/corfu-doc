@@ -518,21 +518,16 @@ The optional CANDIDATE-INDEX is the the current completion candidate index."
                      #'corfu-doc--manual-popup-show corfu--index)))))
       (corfu-doc--popup-hide))))
 
-(defun corfu-doc--funcall (function &rest args)
-  "Call FUNCTION with ARGS in the documentation buffer."
-  (when-let ((cf-doc-buf
-              (and (corfu-doc--popup-visible-p)
-                   (get-buffer " *corfu-doc*"))))
-    (when (functionp function)
-      (with-selected-frame corfu-doc--frame
-        (with-current-buffer cf-doc-buf
-          (apply function args))))))
-
 (defun corfu-doc--popup-scroll (n)
   "Scroll text of the documentaion buffer window upward N lines.
 
 See `scroll-up' for details."
-  (corfu-doc--funcall #'scroll-up n))
+  (when-let ((cf-doc-buf
+              (and (corfu-doc--popup-visible-p)
+                   (get-buffer " *corfu-doc*"))))
+    (with-selected-frame corfu-doc--frame
+      (with-current-buffer cf-doc-buf
+        (apply #'scroll-up n)))))
 
 ;;;###autoload
 (defun corfu-doc-scroll-up (&optional n)
