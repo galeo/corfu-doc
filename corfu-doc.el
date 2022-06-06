@@ -440,7 +440,10 @@ it should be compared with the value recorded by `corfu--index'."
 
 The optional CANDIDATE-INDEX is the the current completion candidate index."
   (unless (corfu--popup-support-p)
-    (error "Corfu-doc requires child frames to display documentation"))
+    (display-warning
+     'corfu-doc
+     "Corfu-doc requires child frames to display documentation"
+     :warning))
   (when (corfu-doc--should-show-popup candidate-index)
     (when-let ((candidate (corfu-doc--get-candidate))
                (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
