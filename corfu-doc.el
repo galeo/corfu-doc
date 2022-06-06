@@ -388,6 +388,10 @@ FWIDTH and FHEIGHT."
   (and (> corfu--total 0)
        (nth corfu--index corfu--candidates)))
 
+(defun corfu-doc--get-cf-popup-edges ()
+  "Get coordinates of the corfu popup."
+  (frame-edges corfu--frame 'inner))
+
 (defun corfu-doc--should-refresh-popup (candidate)
   "Determine whether the doc popup should be refreshed.
 
@@ -407,7 +411,7 @@ compared with the value recorded by `corfu-doc--candiate'."
            (corfu-doc--calc-popup-position
             (frame-pixel-width corfu-doc--frame)
             (frame-pixel-height corfu-doc--frame)))
-    (setq corfu-doc--cf-popup-edges (frame-edges corfu--frame 'inner))))
+    (setq corfu-doc--cf-popup-edges (corfu-doc--get-cf-popup-edges))))
 
 (defun corfu-doc--update-popup (doc)
   "Update the documentation popup with the DOC content."
@@ -439,7 +443,7 @@ The optional CANDIDATE-INDEX is the the current completion candidate index."
     (error "Corfu-doc requires child frames to display documentation"))
   (when (corfu-doc--should-show-popup candidate-index)
     (when-let ((candidate (corfu-doc--get-candidate))
-               (cf-popup-edges (frame-edges corfu--frame 'inner)))
+               (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
       (if (corfu-doc--should-refresh-popup candidate)
           (corfu-doc--refresh-popup)
         ;; fetch documentation and show
@@ -497,7 +501,7 @@ The optional CANDIDATE-INDEX is the the current completion candidate index."
 
 (defun corfu-doc--cf-popup-edges-changed-p ()
   "Determine whether the coordinates of the corfu popup have changed."
-  (not (equal (frame-edges corfu--frame 'inner)
+  (not (equal (corfu-doc--get-cf-popup-edges)
               corfu-doc--cf-popup-edges)))
 
 (defun corfu-doc--popup-transition ()
