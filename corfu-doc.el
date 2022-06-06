@@ -546,7 +546,7 @@ See `scroll-up' for details."
                    (get-buffer " *corfu-doc*"))))
     (with-selected-frame corfu-doc--frame
       (with-current-buffer cf-doc-buf
-        (apply #'scroll-up n)))))
+        (funcall #'scroll-up n)))))
 
 ;;;###autoload
 (defun corfu-doc-scroll-up (&optional n)
