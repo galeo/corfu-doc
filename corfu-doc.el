@@ -430,7 +430,7 @@ compared with the value recorded by `corfu-doc--candiate'."
 
 The optional CANDIDATE-INDEX is the the current completion candidate index,
 it should be compared with the value recorded by `corfu--index'."
-  (and corfu-mode
+  (and corfu-mode (corfu--popup-support-p)
        (corfu-doc--cf-popup-visible-p)
        (or (null candidate-index)
            (equal candidate-index corfu--index))))
@@ -439,11 +439,6 @@ it should be compared with the value recorded by `corfu--index'."
   "Show the doc popup manually.
 
 The optional CANDIDATE-INDEX is the the current completion candidate index."
-  (unless (corfu--popup-support-p)
-    (display-warning
-     'corfu-doc
-     "Corfu-doc requires child frames to display documentation"
-     :warning))
   (when (corfu-doc--should-show-popup candidate-index)
     (when-let ((candidate (corfu-doc--get-candidate))
                (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
