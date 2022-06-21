@@ -76,7 +76,7 @@ documentation update delay."
           (const :tag "clear content" clear)
           (const :tag "hide popup" hide)))
 
-(defcustom corfu-doc-max-width 60
+(defcustom corfu-doc-max-width 80
   "The max width of the corfu doc frame in characters."
   :type 'integer)
 
