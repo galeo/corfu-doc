@@ -240,6 +240,10 @@ WINDOW is the current window where the corfu popup is located."
   (set-frame-size frame width height t)
   (make-frame-visible frame))
 
+(defun corfu-doc--advice-help-buffer ()
+  "Advice `help-buffer' to return the name of a buffer for displaying docstring."
+  (buffer-name (get-buffer-create " *Corfu-doc*")))
+
 (defun corfu-doc--get-doc ()
   "Get the documentation for the current completion candidate.
 
@@ -260,7 +264,9 @@ Returns nil if an error occurs or the documentation content is empty."
                    (save-excursion
                      (let ((inhibit-message t)
                            (message-log-max nil))
-                       (funcall fun (nth corfu--index corfu--candidates))))))
+                       (cl-letf (((symbol-function 'help-buffer)
+                                  #'corfu-doc--advice-help-buffer))
+                         (funcall fun (nth corfu--index corfu--candidates)))))))
                  (let ((buf (or (car-safe res) res)))
                    (with-current-buffer buf
                      (buffer-string)))
