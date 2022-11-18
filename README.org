@@ -1,7 +1,8 @@
 #+TITLE: corfu-doc - Documentation popup for Corfu
 #+AUTHOR: Yuwei Tian
 
-#+html: <a href="https://melpa.org/#/corfu-doc"><img alt="MELPA" src="https://melpa.org/packages/corfu-doc-badge.svg"/></a>
+*Important:* this package has been merged into Corfu as one of its [[https://github.com/minad/corfu#extensions][extensions]].
+And this repository is *deprecated* now.
 
 * Introduction
 
