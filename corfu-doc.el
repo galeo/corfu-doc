@@ -480,8 +480,8 @@ The optional CANDIDATE-INDEX is the the current completion candidate index."
   :group 'corfu
   (display-warning
    'corfu-doc
-   "This package is now obsolete and superseded by the corfu built-in extension. \
-Please try to migrate."
+   "This package is now obsolete and superseded by the corfu built-in extension \
+corfu-popupinfo. Please try to migrate."
    :warning)
   (cond
     (corfu-doc-mode

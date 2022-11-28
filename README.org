@@ -1,8 +1,7 @@
 #+TITLE: corfu-doc - Documentation popup for Corfu
 #+AUTHOR: Yuwei Tian
 
-*Important:* this package has been merged into Corfu as one of its [[https://github.com/minad/corfu#extensions][extensions]].
-And this repository is *deprecated* now.
+*Important:* this package has been merged into Corfu as one of its extensions under the name [[https://github.com/minad/corfu/blob/main/extensions/corfu-popupinfo.el][corfu-popupinfo]]. And this repository is *deprecated* now.
 
 * Introduction
 
